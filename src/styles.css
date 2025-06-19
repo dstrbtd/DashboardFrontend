@@ -1,0 +1,778 @@
+/* styles.css */
+
+/* Universal box-sizing and reset margin/padding for html/body */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  font-family: sans-serif; /* Fallback, body will specify Montserrat */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Base font and body styles */
+body {
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  background-color: #000000;
+  color: #e0e0e0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  background-color: #1a1a1a;
+  color: #cccccc;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+/* Main App Container */
+.App {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
+.header {
+  background-color: #000000;
+  padding: 20px;
+  border-bottom: 1px solid #222222;
+  color: #f5f5f5;
+}
+
+.header h1 {
+  margin: 0 0 5px 0;
+  font-size: 2.5em;
+  color: #ffffff;
+}
+
+.header p {
+  margin: 0 0 20px 0;
+  font-size: 1.1em;
+  color: #bbbbbb;
+}
+
+/* Tabs */
+.tabs {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.tabs button {
+  background-color: #111111;
+  color: #cccccc;
+  border: 1px solid #333333;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.tabs button:hover {
+  background-color: #222222;
+  color: #ffffff;
+}
+
+.tabs button.active {
+  background-color: #b0b0b0;
+  color: #000000;
+  border-color: #b0b0b0;
+  font-weight: bold;
+}
+
+/* Content Area */
+.content {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+/* Section Titles */
+.global-view h2,
+.miner-explorer h2,
+.allreduce-operations {
+  /* No specific width constraints here, let content flow */
+}
+
+.allreduce-operations .main-operations-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #0f0f0f;
+  font-size: 1em; /* Base font size */
+  table-layout: fixed; /* Helps with consistent column widths if possible, or remove if causing issues */
+}
+
+.allreduce-operations .main-operations-table th,
+.allreduce-operations .main-operations-table td {
+  padding: 12px 15px;    /* Consistent padding */
+  text-align: left;      /* Ensure all text aligns left by default */
+  vertical-align: middle;/* Align content vertically */
+  border-bottom: 1px solid #252525; /* Row separator for data cells */
+  word-wrap: break-word; /* Allow long content to wrap if table-layout: fixed is used */
+}
+
+.allreduce-operations .main-operations-table th {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-bottom-width: 2px; /* Stronger bottom border for headers */
+  border-bottom-color: #333;
+  white-space: nowrap; /* Keep headers on one line if possible */
+}
+/* Specific alignment for numeric columns if needed, e.g., "Reporting Validators" */
+.allreduce-operations .main-operations-table th:last-child,
+.allreduce-operations .main-operations-table td:last-child {
+  text-align: right; /* Example: If the last column is numeric */
+}
+/* Adjust above if your "Reporting Validators" is not the last or needs left align */
+.allreduce-operations .main-operations-table th:nth-child(1), /* Expand button column */
+.allreduce-operations .main-operations-table td:nth-child(1) {
+  width: 50px; /* Or appropriate fixed width for the +/- button */
+  text-align: center;
+}
+
+
+.allreduce-operations .main-operations-table tr:last-child td {
+  border-bottom: none;
+}
+.allreduce-operations .main-operations-table tbody tr:hover td {
+  background-color: #1f1f22;
+}
+
+/* Styling for the row that was clicked to expand */
+.allreduce-operations .main-operations-table tr.expanded-row-header td {
+  background-color: #1a1d23 !important; /* Darker bg for the 'parent' row of expanded content */
+  /* No more blue border here, rely on background and separator below */
+  border-bottom: 1px solid #303338; /* Clear separator above nested content */
+}
+
+
+/* Expanded Row Content (Validator Reports) - REVISED HIGHLIGHT */
+.allreduce-operations .expanded-row-content td { /* The TD that HOLDS the nested details */
+  padding: 0 !important;
+  /* Remove prominent blue borders */
+  border-left: none !important; /* Clean up potential side borders */
+  border-right: none !important;
+  border-top: none !important; /* The row above handles separation */
+  border-bottom: 1px solid #303338 !important; /* Separator below nested content */
+}
+
+.allreduce-operations .validator-details-container { /* The div inside the expanded cell */
+  padding: 20px 25px;      /* Good padding */
+  background-color: #14161a; /* Slightly different, darker background for the entire nested block */
+}
+
+.allreduce-operations .validator-details-container h4 { /* "Validator Reports for Operation..." */
+  color: #e8edf5;
+  font-size: 1.25em;       /* Readable title */
+  margin-top: 0;
+  margin-bottom: 18px;
+  text-align: left;
+  border-bottom: 1px solid #2c2f36;
+  padding-bottom: 10px;
+}
+
+/* Nested Validator Details Table - ENLARGED */
+.allreduce-operations .validator-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.98em;       /* INCREASED: Closer to main table font size */
+}
+
+.allreduce-operations .charts-section .chart-container {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: calc(50% - 10px); /* Suggests a 50/50 split minus gap */
+  min-width: 300px; /* Still important for wrapping on very small screens */
+}
+
+.allreduce-operations .validator-details-table th,
+.allreduce-operations .validator-details-table td {
+  padding: 12px 15px;    /* INCREASED: More spacious cells */
+  text-align: left;
+  border-bottom: 1px solid #282b30; /* Subtle row separators */
+  vertical-align: middle;
+}
+
+.allreduce-operations .validator-details-table th {
+  background-color: #202328;
+  color: #d8e0ea;
+  font-weight: 500;
+  font-size: 0.95em; /* Relative to parent table's font-size */
+  white-space: nowrap;
+}
+
+.allreduce-operations .validator-details-table td {
+  color: #b8c0cc;
+}
+.allreduce-operations .validator-details-table tr:last-child td {
+  border-bottom: none;
+}
+.allreduce-operations .validator-details-table tbody tr:hover td {
+  background-color: #1e2125;
+}
+/* Specific alignment for numeric columns in nested table if needed */
+.allreduce-operations .validator-details-table th.numeric-column, /* Add .numeric-column class in JSX */
+.allreduce-operations .validator-details-table td.numeric-column {
+  text-align: right;
+}
+
+/* Sub-section Titles (e.g., within Miner Explorer) */
+.miner-comparison-table-container h3,
+.miner-score-heatmap-container h3,
+.miner-score-heatmap-container-wrapper,
+.chart-container h3,
+.heatmap-controls + h3 { /* For h3 directly after heatmap controls */
+  color: #e0e0e0;
+  font-size: 1.4em;
+  margin-top: 20px; /* Add some space above sub-section titles */
+  margin-bottom: 15px;
+  /* border-bottom: 1px solid #282828; /* Lighter sub-border */
+  /* padding-bottom: 8px; */
+}
+.validator-details-container h5 { /* For nested table titles */
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #e0e0e0;
+    font-size: 1.1em;
+}
+
+
+/* --- react-select Dark Theme Styles --- */
+/* You gave your Select component className="miner-select-dropdown" and classNamePrefix="react-select" */
+/* We'll primarily use the classNamePrefix for robust styling */
+
+.react-select__control {
+  background-color: #1a1a1a !important;
+  border-color: #444444 !important;
+  color: #e0e0e0 !important;
+  box-shadow: none !important; /* Remove default blue shadow */
+}
+.react-select__control:hover {
+  border-color: #555555 !important;
+}
+.react-select__control--is-focused {
+  border-color: #6c99bb !important; /* A slightly brighter focus color */
+  box-shadow: 0 0 0 1px #6c99bb !important;
+}
+.react-select__menu {
+  background-color: #16161a !important; /* Slightly different from control for depth */
+  color: #e0e0e0 !important;
+  border: 1px solid #333333 !important;
+  z-index: 10; /* Ensure it's above other content */
+}
+.react-select__option {
+  background-color: #16161a !important;
+  color: #e0e0e0 !important;
+  cursor: pointer;
+}
+.react-select__option:hover { /* Hover, but not focused by keyboard */
+  background-color: #2a2a2e !important;
+}
+.react-select__option--is-focused { /* Keyboard focused or mouse hover */
+  background-color: #333338 !important;
+}
+.react-select__option--is-selected {
+  background-color: #007bff !important; /* Or your theme's primary color for selection */
+  color: white !important;
+}
+.react-select__option--is-selected:hover {
+  background-color: #0056b3 !important; /* Darker shade for selected hover */
+}
+.react-select__multi-value {
+  background-color: #333338 !important;
+  border-radius: 4px;
+}
+.react-select__multi-value__label {
+  color: #e0e0e0 !important;
+  padding: 3px 6px;
+}
+.react-select__multi-value__remove {
+  color: #cccccc !important;
+  padding-left: 4px; /* Add a bit of space */
+}
+.react-select__multi-value__remove:hover {
+  background-color: #c0392b !important; /* Red for remove hover */
+  color: white !important;
+  border-top-right-radius: 3px; /* Keep rounded corners */
+  border-bottom-right-radius: 3px;
+}
+.react-select__input-container, /* For react-select v5+ input text color */
+.react-select__input > input { /* For older versions if needed */
+  color: #e0e0e0 !important;
+}
+.react-select__placeholder {
+  color: #888888 !important;
+}
+.react-select__single-value { /* If not isMulti, for selected value color */
+  color: #e0e0e0 !important;
+}
+.react-select__indicator-separator {
+  background-color: #444444 !important;
+}
+.react-select__dropdown-indicator,
+.react-select__clear-indicator {
+  color: #888888 !important;
+}
+.react-select__dropdown-indicator:hover,
+.react-select__clear-indicator:hover {
+  color: #e0e0e0 !important;
+}
+.react-select__menu-list {
+    padding-top: 0; /* Remove default padding if any */
+    padding-bottom: 0;
+}
+.react-select__menu-notice--no-options {
+    color: #a0a0a0; /* For "No options" message */
+    padding: 8px 12px;
+    text-align: center;
+}
+
+
+/* Tables (General Styling) */
+/* .scores-table, .operations-table, .main-comparison-table, .heatmap-table */
+.scores-table { /* Apply this to all tables that need this base style */
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0; /* Reduced from 20px as h3 now has margin */
+  margin-bottom: 0;
+  background-color: #0f0f0f;
+  border-radius: 8px;
+  overflow: hidden; /* Important for border-radius on tables */
+  border: 1px solid #2a2a2a;
+  box-shadow: none;
+  font-size: 0.95em; /* Slightly smaller for dense tables */
+}
+
+.scores-table th,
+.scores-table td {
+  border: 1px solid #222222;
+  padding: 10px 12px; /* Slightly reduced padding */
+  text-align: left;
+  vertical-align: middle; /* Good for cells with buttons */
+}
+
+.scores-table th {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+  font-weight: 600; /* Slightly bolder headers */
+  white-space: nowrap; /* Prevent headers from wrapping if possible */
+}
+
+.scores-table td {
+  color: #cccccc;
+}
+
+.scores-table tbody tr:nth-child(even) {
+  background-color: #131313; /* Darker, subtle striping */
+}
+.scores-table tbody tr:hover {
+  background-color: #18181c; /* Hover effect for rows */
+}
+
+.scores-table td:first-child,
+.heatmap-table td:first-child {
+    font-weight: 600; /* Make Miner UIDs stand out a bit */
+    color: #cacaca;
+}
+.scores-table th:first-child { /* For the + button cell in summary */
+    /* display: flex; /* Done inline, but could be class */
+    /* align-items: center; */
+}
+
+
+/* Expand Button (used in Summary Table and AllReduce Table) */
+.expand-button {
+  background: #282c34;
+  border: 1px solid #4a4e58;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 3px 7px; /* Adjusted padding */
+  border-radius: 4px; /* Slightly more rounded */
+  font-weight: bold;
+  line-height: 1;
+  transition: background-color 0.2s, transform 0.2s;
+  margin-right: 8px; /* Space between button and text */
+}
+.expand-button:hover {
+  background-color: #3a3f4a;
+  transform: scale(1.05);
+}
+
+.allreduce-operations .main-operations-table td .expand-button,
+.allreduce-operations .main-operations-table th .expand-button { /* If button can be in header */
+  vertical-align: middle;
+  margin-right: 8px; /* Space if there's text next to it */
+}
+
+/* Expanded Row Styling (used in Summary Table and AllReduce Table) */
+.expanded-row-header { /* The row that was clicked to expand */
+  background-color: #15181e !important; /* Distinct background for the header of an expanded section */
+}
+.expanded-row-content td { /* The cell containing the nested details */
+  padding: 0 !important; /* Remove padding from the container TD */
+  border-top: 2px solid #2a2a2a !important; /* Stronger separator for expanded content */
+  border-bottom: 1px solid #222222 !important; /* Keep bottom border consistent */
+}
+.validator-details-container { /* The div inside the expanded cell */
+  padding: 15px;
+  background-color: #101216; /* Darker background for nested content */
+  /* border-top: none; /* Removed as the td above handles it */
+  margin: 0;
+}
+.validator-details-table { /* Nested table for validator scores */
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.validator-details-table th,
+.validator-details-table td {
+  border: 1px solid #252830; /* Darker borders for nested table */
+  padding: 6px 10px;
+  text-align: left;
+  color: #b0b8c5; /* Slightly lighter grey for nested table text */
+}
+.validator-details-table th {
+  background-color: #1f2228;
+  color: #e0e6f0;
+}
+.validator-details-table tbody tr:nth-child(even) {
+  background-color: #16181d;
+}
+.validator-details-table tbody tr:hover {
+  background-color: #1c1f25;
+}
+
+
+/* Heatmap Table Specifics */
+.heatmap-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px !important; /* Overriding default margin-bottom of h3 if this is applied directly to controls */
+  padding: 10px 15px !important; /* Override inline if needed */
+  background-color: #0f0f0f !important; /* Match chart-container */
+  border-radius: 8px !important;
+  border: 1px solid #2a2a2a !important;
+}
+.heatmap-controls label {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+.heatmap-controls select {
+  padding: 8px 12px; /* Consistent padding */
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95em;
+}
+.heatmap-controls select:focus {
+    border-color: #6c99bb;
+    outline: none;
+}
+.heatmap-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap; /* Allow legend items to wrap */
+  gap: 10px 20px; /* Row gap, Column gap */
+  margin-top: 15px;
+  margin-bottom: 10px; /* Space before next section */
+  font-size: 0.85em;
+  color: #b0b8c5;
+}
+.heatmap-legend span > span { /* The colored square */
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
+  border: 1px solid #555; /* Optional border for squares */
+  vertical-align: middle;
+}
+
+.heatmap-table th, .heatmap-table td {
+  text-align: center !important; /* Center align heatmap scores */
+  padding: 8px 5px !important; /* Custom padding for heatmap cells */
+  border: 1px solid #181a1f !important; /* Slightly different border for heatmap cells */
+  font-weight: 500; /* Make numbers a bit bolder */
+  min-width: 70px; /* Ensure cells have some width */
+  white-space: nowrap;
+}
+.heatmap-table th:first-child, /* Miner UID column in heatmap */
+.heatmap-table td:first-child {
+  text-align: left !important;
+  padding-left: 12px !important;
+  font-weight: 600;
+  min-width: 100px;
+}
+
+
+/* Charts & Map Area */
+.charts-row { /* Global overview chart row */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+.chart-container.half-width { /* Global overview chart containers */
+  flex: 1;
+  min-width: 300px;
+}
+.charts { /* Now .charts also gets this card style */
+  background-color: #0f0f0f;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+  margin-bottom: 30px;
+  gap: 20px;
+}
+.charts h3 { /* Titles for charts within the .charts "card" */
+  color: #e0e0e0;
+  font-size: 1.3em;
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center; /* Center chart titles */
+}
+.chart-container {
+  background-color: #0f0f0f;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 0;
+  border: none;
+}
+.chart-container h3 { /* Title for individual charts */
+  margin-top: 0;
+  margin-bottom: 20px; /* More space after title */
+  color: #e0e0e0;
+  font-size: 1.3em;
+  /* border-bottom: 1px solid #222; */
+  /* padding-bottom: 10px; */
+}
+
+/* Recharts specific dark mode overrides */
+.recharts-legend-item-text { color: #b0b8c5 !important; }
+.recharts-custom-tooltip {
+  background-color: rgba(10, 16, 26, 0.9); /* Match Deck.gl */
+  color: #e0e6f0;                          /* Match Deck.gl */
+  padding: 10px 15px;                      /* Match Deck.gl */
+  border-radius: 4px;                      /* Match Deck.gl */
+  font-family: Montserrat, sans-serif;     /* Match Deck.gl */
+  font-size: 13px;                         /* Match Deck.gl */
+  line-height: 1.5;                        /* Match Deck.gl */
+  max-width: 320px;                        /* Match Deck.gl */
+  border: 1px solid #204060;               /* Match Deck.gl */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);  /* Match Deck.gl */
+  /* Recharts tooltips don't use pre-wrap by default for simple list items */
+}
+.recharts-custom-tooltip-label {
+  color: #f0f5ff; /* Slightly brighter for label, like original Recharts style */
+  margin: 0 0 8px 0; /* Adjusted margin */
+  font-weight: 600;
+  border-bottom: 1px solid #333740; /* Separator line */
+  padding-bottom: 5px;
+  display: block;
+  text-align: left;
+}
+.recharts-custom-tooltip-item-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.recharts-custom-tooltip-item {
+  /* color is set inline by JS based on line color, or a default grey for '... more' */
+  display: block;
+  padding: 1px 0; /* Minimal padding */
+  text-align: left;
+  white-space: nowrap; /* Prevent long UIDs from wrapping if possible */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Add ellipsis for very long names if they still overflow max-width */
+}
+.recharts-cartesian-axis-tick-value { fill: #9098a5 !important; }
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #252830 !important;
+}
+
+/* Map and Stats Row (Global Overview) */
+
+/* Row for Map and Stats Cards */
+.map-and-stats-row {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens if necessary */
+  gap: 20px; /* Space between map column and stats column */
+  margin-bottom: 30px; /* Space before the next row of charts */
+}
+
+.map-column {
+  flex: 3; /* Map takes more space */
+  min-width: 300px; /* Minimum width before wrapping or shrinking too much */
+  /* The map component itself will define its background and appearance */
+  position: relative;
+}
+.map-column h3 { /* If you have a title above the map */
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #e0e0e0;
+}
+
+.stats-column {
+  flex: 1; /* Stats cards take less space */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Space between individual stat cards */
+  min-width: 250px;
+}
+
+/* MODIFIED: Global Overview - Stats Overview Cards */
+.stat-overview-card {
+  background-color: #0f0f0f; /* MATCHES .chart-container for consistency */
+  color: #E2E8F0;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a; /* MATCHES .chart-container */
+  box-shadow: none;           /* MATCHES .chart-container */
+  display: flex;
+  align-items: center;
+}
+
+.stat-icon {
+  font-size: 2em;
+  margin-right: 15px;
+  padding: 5px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.05); /* Slightly lighter than card for icon bg */
+}
+/* More distinct icon colors, but still desaturated for the theme */
+.bandwidth-icon { color: #6c99bb; } /* Muted blue */
+.tokens-icon { color: #bba26c; }   /* Muted orange/gold */
+.miners-icon { color: #7fbb6c; }    /* Muted green */
+
+/* Miner Explorer Specifics (Old, some might be replaced or adapted) */
+.miner-select { /* Container for react-select */
+  margin-bottom: 25px;
+  /* display: flex; /* react-select handles its own layout */
+  /* flex-direction: column; */
+  /* align-items: center; */ /* If you want the whole block centered */
+  /* gap: 8px; */
+}
+.select-label { /* Label for react-select */
+  display: block; /* Ensure it's on its own line */
+  font-size: 1.1em;
+  color: #e0e0e0;
+  margin-bottom: 8px; /* Space between label and select */
+  text-align: left; /* Or center if preferred */
+}
+/* .miner-select-dropdown is now mostly handled by react-select specific classes */
+
+.deck-tooltip {
+  background-color: rgba(10, 16, 26, 0.9) !important;
+  color: #e0e6f0 !important;
+  padding: 10px 15px !important;
+  border-radius: 4px !important;
+  font-family: Montserrat, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  max-width: 320px !important;
+  white-space: pre-wrap !important; /* DeckGL uses this for \n */
+  border: 1px solid #204060 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+  z-index: 1001 !important;
+  pointer-events: none !important;
+}
+
+/* NEW: General container for data sections within Miner Explorer */
+.data-section-container {
+  background-color: #0f0f0f; /* Matches chart-container */
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  margin-bottom: 30px; /* Space between sections */
+}
+.data-section-container h3 { /* Titles within these containers */
+  color: #e0e0e0;
+  font-size: 1.4em;
+  margin-top: 0; /* No top margin if it's the first element in container */
+  margin-bottom: 15px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 10px;
+}
+
+/* Generic Loading, Error, No Data Messages */
+.loading, .error-message, .no-data, .no-miner-selected {
+  padding: 20px;
+  margin: 20px auto; /* Centering these blocks */
+  border-radius: 6px; /* Slightly more rounded */
+  max-width: 600px;
+  text-align: center;
+  font-size: 0.95em;
+}
+.loading {
+  background-color: #1c1f26;
+  color: #c0c8d5;
+  border: 1px solid #333740;
+}
+.error-message {
+  background-color: #422020;
+  color: #ffcccc;
+  border: 1px solid #683030;
+}
+.no-data, .no-miner-selected {
+  background-color: #1c1f26;
+  color: #808895; /* Muted text */
+  border: 1px dashed #444a58; /* Dashed border for "empty" states */
+}
+
+/* Auto Refresh Section */
+.auto-refresh {
+  padding: 15px;
+  background-color: #000000; /* Black footer area */
+  border-top: 1px solid #222222;
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Refresh button style - like "VIEW RUN" */
+.refresh-button {
+  background-color: #b0b0b0; /* Light grey background */
+  color: #000000;            /* Black text */
+  border: none;
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: inherit;
+}
+
+.refresh-button:hover {
+  background-color: #c0c0c0; /* Slightly lighter on hover */
+}
+
+.last-updated {
+  font-size: 0.9em;
+  color: #888888; /* Medium grey text */
+}
