@@ -18,7 +18,7 @@ import axios from "axios";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import GlobalNetworkMap from './GlobalNetworkMap';
 
-const API_BASE_URL = process.env.REACT_APP_FASTAPI_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.REACT_APP_FASTAPI_URL || "http://161.97.156.125:8003";
 
 // Format time helper (can be kept for tooltips if time is still shown)
 // const formatTime = (timeStr) => {
