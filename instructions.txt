@@ -1,0 +1,60 @@
+Local debug:
+npm run dev
+# websocket runs on Frankfurt ngrok via MinerGraph.jsx:
+const ws = new WebSocket('wss://aff1fda3ce35.ngrok-free.app')
+For local debugging change to 
+const ws = new WebSocket('ws://localhost:8765')
+
+production (active on Frankfurt server)
+- cd ~/38_training/webpage_dt && ngrok http 8765 (tmux attach -t ngrok_ws)
+  # Warning: when ran, copy new ngrok URL to MinerGraph.jsx
+- cd ~/38_training/webpage_dt/graph_data/influx python websocket_server.py (tmux attach -t ws_server)
+
+Switch to websockets local by
+1) set websocketUrls.js WS_ENV.LOCAL
+2) run 
+
+
+
+# clone webpage_dt:
+git clone git@github.com:JorritvanGils/webpage_d_training.git webpage_dt
+pip install websockets pandas influxdb-client
+npm install react-router-dom
+
+
+ ┌────────────┐       Query       ┌────────────┐     Push      ┌────────────┐
+ │ InfluxDB   ├─────────────────► │ Python WS  ├──────────────►│ React App  │
+ └────────────┘ every N seconds   └────────────┘  JSON update  └────────────┘
+                                      ▲
+                                      │
+                            prepare_MinerGraphData.py logic
+
+
+
+
+# OLD ROADMAP
+
+1. Set Up React Project
+# Using Vite
+npm create vite@latest webpage_dt --template react
+cd webpage_dt
+npm install
+npm run dev
+
+2. Add the Miner Graph
+a table of train and all redce scores for each miner.
+
+3. Publish to GitHub & Deploy via Vercel
+a. Push to GitHub
+git init
+git remote add origin https://github.com/yourusername/miner-dashboard.git
+git add .
+git commit -m "Initial commit"
+git push -u origin main
+
+b. Deploy on Vercel
+Go to vercel.com
+Connect your GitHub account
+Import your miner-dashboard repo
+Vercel will auto-deploy after each push
+Custom domain idea: dash.dstrbtd.ai (can set it via Vercel dashboard)
