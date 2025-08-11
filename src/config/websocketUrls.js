@@ -6,7 +6,7 @@ const WS_ENV = {
   NGROK: 'wss://aff1fda3ce35.ngrok-free.app',
 };
 
-const CURRENT_WS_URL = WS_ENV.LOCAL;
+const CURRENT_WS_URL = WS_ENV.NGROK;
 
 export default {
   WS_URL: CURRENT_WS_URL,
