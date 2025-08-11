@@ -1,42 +1,35 @@
 from influxdb_client import InfluxDBClient
 import pandas as pd
+import time
 
-# DOES NOT WORK PROPERLY
-
-def simple_check_measurement(query_api, measurement: str):
-    flux = f'''
-    from(bucket: "distributed-training-metrics")
-      |> range(start: -1d)
-      |> filter(fn: (r) => r._measurement == "{measurement}")
-      |> limit(n: 10)
-    '''
-    print("Running simplified Flux query:")
-    print(flux)
-    df = query_api.query_data_frame(flux)
-    if not isinstance(df, pd.DataFrame):
-        print("Query did not return a DataFrame.")
-        return pd.DataFrame()
-    return df
-
-if __name__ == "__main__":
-    url = "http://161.97.156.125:8086"
-    token = "JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g=="
-    org = "distributed-training"
-    timeout=260_000
-
-    client = InfluxDBClient(url=url, token=token, org=org, timeout=timeout)
+def test_allreduce_query(run_id="6", days=5):
+    client = InfluxDBClient(
+        url="http://161.97.156.125:8086",
+        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
+        org="distributed-training"
+    )
     query_api = client.query_api()
 
-    measurement_name = "training_metrics"
+    flux = f'''
+    from(bucket: "distributed-training-metrics")
+      |> range(start: -{days}d)
+      |> filter(fn: (r) => r._measurement == "allreduce_operations")
+      |> filter(fn: (r) => exists r.epoch and exists r.validator_uid and exists r._value)
+      |> filter(fn: (r) => r["run_id"] == "{run_id}")
+      |> group(columns: ["validator_uid", "epoch", "run_id", "_field"])
+      |> mean()
+      |> pivot(rowKey: ["epoch", "validator_uid"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["epoch"])
+    '''
+    start_time = time.time()
+    df = query_api.query_data_frame(flux)
+    end_time = time.time()
+    print(f"Query took {end_time - start_time:.2f} seconds")
+    print(f"Columns: {df.columns.tolist() if isinstance(df, pd.DataFrame) else 'No DataFrame'}")
+    print(df.head() if isinstance(df, pd.DataFrame) else df)
 
-    df = simple_check_measurement(query_api, measurement_name)
-
-    print("\nReturned DataFrame columns:")
-    print(df.columns.tolist())
-    print("\nDataFrame head:")
-    print(df.head())
-
-    if df.empty:
-        print("\n⚠ No raw data found for measurement.")
-    else:
-        print("\n✅ Raw data returned successfully.")
+if __name__ == "__main__":
+    print("Testing with days=1")
+    test_allreduce_query(days=1)
+    print("\nTesting with days=5")
+    test_allreduce_query(days=5)
