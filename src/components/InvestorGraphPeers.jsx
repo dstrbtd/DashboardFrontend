@@ -43,8 +43,10 @@ export default function InvestorGraphPeers() {
         // Pick validator with most epochs
         let selectedValidator = data.validators[validatorUIDs[0]];
         for (const uid of validatorUIDs) {
-          if ((data.validators[uid]?.peers?.epoch?.length || 0) >
-              (selectedValidator?.peers?.epoch?.length || 0)) {
+          if (
+            (data.validators[uid]?.peers?.epoch?.length || 0) >
+            (selectedValidator?.peers?.epoch?.length || 0)
+          ) {
             selectedValidator = data.validators[uid];
           }
         }
@@ -60,10 +62,11 @@ export default function InvestorGraphPeers() {
             {
               label: 'Number of Peers',
               data: peerCounts,
-              borderColor: '#ff4c4c',
-              backgroundColor: 'rgba(255, 76, 76, 0.3)',
+              borderColor: '#eee',
+              backgroundColor: 'transparent',
               tension: 0.4,
-              pointRadius: 3,
+              pointRadius: 0,
+              hoverRadius: 5,
               yAxisID: 'y',
             },
           ],
@@ -102,60 +105,108 @@ export default function InvestorGraphPeers() {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       title: {
         display: false,
         text: runId
           ? `Run ${runId} - Active Peers Over Outer Steps`
           : 'Active Peers Over Outer Steps',
-        color: '#e0e0e0',
+        color: '#eee',
         font: {
           size: 16,
           family: "'IBM Plex Mono', monospace",
         },
       },
-      legend: {
-        display: false,
-        labels: { color: '#e0e0e0' },
-      },
+      legend: { display: false },
       tooltip: {
-        backgroundColor: '#333',
-        titleFont: {
-          family: "'IBM Plex Mono', monospace",
-          size: 14,
-        },
-        bodyFont: {
-          family: "'IBM Plex Mono', monospace",
-          size: 12,
+        enabled: true,
+        backgroundColor: '#111',
+        titleColor: '#eee',
+        bodyColor: '#eee',
+        cornerRadius: 0,
+        caretSize: 5,
+        displayColors: false,
+        callbacks: {
+          label: function (context) {
+            const value = context.parsed.y;
+            return `Peers: ${value}`;
+          },
         },
       },
     },
+    layout: {
+      padding: 10,
+    },
+    interaction: {
+      mode: 'nearest',
+      intersect: false,
+    },
     scales: {
       x: {
-        title: { display: true, text: 'Outer Step', color: '#e0e0e0' },
-        ticks: { color: '#e0e0e0' },
-        grid: { color: 'rgba(224,224,224,0.1)' },
+        title: { display: true, text: 'Outer Step', color: '#eee' },
+        ticks: { color: '#eee' },
+        grid: {
+          color: 'transparent',
+          borderColor: 'transparent',
+        },
       },
       y: {
-        title: { display: true, text: 'Peers', color: '#e0e0e0' },
-        ticks: { color: '#e0e0e0' },
-        grid: { color: 'rgba(224,224,224,0.1)' },
+        title: { display: false, text: 'Peers', color: '#eee' },
+        ticks: { color: '#eee' },
+        grid: {
+          color: 'transparent',
+          borderColor: 'transparent',
+        },
+      },
+    },
+    elements: {
+      line: {
+        borderColor: '#eee',
+        borderWidth: 1.5,
+        tension: 0.4,
+      },
+      point: {
+        radius: 0,
+        hoverRadius: 5,
+        backgroundColor: '#eee',
+        hoverBackgroundColor: '#eee',
       },
     },
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      {chartData ? (
-        <Line
-          key={JSON.stringify(chartData)}
-          ref={chartRef}
-          data={chartData}
-          options={options}
-        />
-      ) : (
-        <p>Loading peer chart...</p>
-      )}
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <h3
+        className="text-ibm"
+        style={{
+          color: '#eee',
+          marginBottom: 8,
+          textAlign: 'left',
+          flexShrink: 0,
+        }}
+      >
+        Number of Peers
+      </h3>
+      <div style={{ flexGrow: 1 }}>
+        {chartData ? (
+          <Line
+            key={JSON.stringify(chartData)}
+            ref={chartRef}
+            data={chartData}
+            options={options}
+          />
+        ) : (
+          <p style={{ color: '#eee' }}>Loading peer chart...</p>
+        )}
+      </div>
     </div>
   );
 }

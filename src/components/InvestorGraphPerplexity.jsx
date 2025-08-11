@@ -52,10 +52,11 @@ export default function InvestorGraphPerplexity() {
             {
               label: "Perplexity",
               data: perplexities,
-              borderColor: "rgb(255, 159, 64)",
+              borderColor: "#eee",
               backgroundColor: "transparent",
               tension: 0.4,
-              pointRadius: 3,
+              pointRadius: 0,
+              hoverRadius: 5,
             },
           ],
         };
@@ -86,46 +87,103 @@ export default function InvestorGraphPerplexity() {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       title: {
         display: false,
         text: runId
           ? `Run ${runId} - Global Model Perplexity Over Outer Steps`
           : "Global Model Perplexity Over Outer Steps",
-        color: "#e0e0e0",
+        color: "#eee",
         font: {
           size: 16,
           family: "'IBM Plex Mono', monospace",
         },
       },
-      legend: {
-        display: false,
-        labels: {
-          color: "#e0e0e0",
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        backgroundColor: "#111",
+        titleColor: "#eee",
+        bodyColor: "#eee",
+        cornerRadius: 0,
+        caretSize: 5,
+        displayColors: false,
+        callbacks: {
+          label: function (context) {
+            const value = context.parsed.y;
+            return `Perplexity: ${value.toFixed(1)}`;
+          },
         },
       },
     },
+    layout: {
+      padding: 10,
+    },
+    interaction: {
+      mode: "nearest",
+      intersect: false,
+    },
     scales: {
       x: {
-        title: { display: true, text: "Outer Step", color: "#e0e0e0" },
-        ticks: { color: "#e0e0e0" },
-        grid: { color: "rgba(224,224,224,0.1)" },
+        title: { display: true, text: "Outer Step", color: "#eee" },
+        ticks: { color: "#eee" },
+        grid: {
+          color: "transparent",
+          borderColor: "transparent",
+        },
       },
       y: {
-        title: { display: true, text: "Perplexity", color: "#e0e0e0" },
-        ticks: { color: "#e0e0e0" },
-        grid: { color: "rgba(224,224,224,0.1)" },
+        title: { display: false, text: "Perplexity", color: "#eee" },
+        ticks: { color: "#eee" },
+        grid: {
+          color: "transparent",
+          borderColor: "transparent",
+        },
+      },
+    },
+    elements: {
+      line: {
+        borderColor: "#eee",
+        borderWidth: 1.5,
+        tension: 0.4,
+      },
+      point: {
+        radius: 0,
+        hoverRadius: 5,
+        backgroundColor: "#eee",
+        hoverBackgroundColor: "#eee",
       },
     },
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      {chartData ? (
-        <Line ref={chartRef} data={chartData} options={options} />
-      ) : (
-        <p>Loading perplexity chart...</p>
-      )}
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <h3
+        className="text-ibm"
+        style={{
+          color: "#eee",
+          marginBottom: 8,
+          textAlign: "left",
+          flexShrink: 0,
+        }}
+      >
+        Perplexity
+      </h3>
+      <div style={{ flexGrow: 1 }}>
+        {chartData ? (
+          <Line ref={chartRef} data={chartData} options={options} />
+        ) : (
+          <p style={{ color: "#eee" }}>Loading perplexity chart...</p>
+        )}
+      </div>
     </div>
   );
 }

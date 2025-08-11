@@ -49,10 +49,11 @@ export default function InvestorGraphLoss() {
             {
               label: "Loss",
               data: losses,
-              borderColor: "rgb(75, 192, 192)",
+              borderColor: "#eee",
               backgroundColor: "transparent",
               tension: 0.4,
-              pointRadius: 3,
+              pointRadius: 0,
+              hoverRadius: 5,
             },
           ],
         };
@@ -80,46 +81,103 @@ export default function InvestorGraphLoss() {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       title: {
         display: false,
         text: runId
           ? `Run ${runId} - Global Model Loss Over Outer Steps`
           : "Global Model Loss Over Outer Steps",
-        color: "#e0e0e0",
+        color: "#eee",
         font: {
           size: 16,
           family: "'IBM Plex Mono', monospace",
         },
       },
-      legend: {
-        display: false,
-        labels: {
-          color: "#e0e0e0",
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        backgroundColor: "#111",
+        titleColor: "#eee",
+        bodyColor: "#eee",
+        cornerRadius: 0,
+        caretSize: 5,
+        displayColors: false,
+        callbacks: {
+          label: function (context) {
+            const value = context.parsed.y;
+            return `Loss: ${value.toFixed(1)}`;
+          },
         },
       },
     },
+    layout: {
+      padding: 10,
+    },
+    interaction: {
+      mode: "nearest",
+      intersect: false,
+    },
     scales: {
       x: {
-        title: { display: true, text: "Outer Step", color: "#e0e0e0" },
-        ticks: { color: "#e0e0e0" },
-        grid: { color: "rgba(224,224,224,0.1)" },
+        title: { display: true, text: "Outer Step", color: "#eee" },
+        ticks: { color: "#eee" },
+        grid: {
+          color: "transparent",
+          borderColor: "transparent",
+        },
       },
       y: {
-        title: { display: true, text: "Loss", color: "#e0e0e0" },
-        ticks: { color: "#e0e0e0" },
-        grid: { color: "rgba(224,224,224,0.1)" },
+        title: { display: false, text: "Loss", color: "#eee" },
+        ticks: { color: "#eee" },
+        grid: {
+          color: "transparent",
+          borderColor: "transparent",
+        },
+      },
+    },
+    elements: {
+      line: {
+        borderColor: "#eee",
+        borderWidth: 1.5,
+        tension: 0.4,
+      },
+      point: {
+        radius: 0,
+        hoverRadius: 5,
+        backgroundColor: "#eee",
+        hoverBackgroundColor: "#eee",
       },
     },
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      {chartData ? (
-        <Line ref={chartRef} data={chartData} options={options} />
-      ) : (
-        <p>Loading loss chart...</p>
-      )}
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <h3
+        className="text-ibm"
+        style={{
+          color: "#eee",
+          marginBottom: 8,
+          textAlign: "left",
+          flexShrink: 0,
+        }}
+      >
+        Loss
+      </h3>
+      <div style={{ flexGrow: 1 }}>
+        {chartData ? (
+          <Line ref={chartRef} data={chartData} options={options} />
+        ) : (
+          <p style={{ color: "#eee" }}>Loading loss chart...</p>
+        )}
+      </div>
     </div>
   );
 }
