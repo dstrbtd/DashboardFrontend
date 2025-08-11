@@ -113,22 +113,22 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
         df = query_api.query_data_frame(flux)
         return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
 
-    # start_time = time.time()
-    # df_train = get_miner_training_metrics(run_id, days).rename(columns={"_value": "loss"})
-    # print("df_train columns:", df_train.columns.tolist())
-    # print(df_train.head())    
-    # end_time = time.time()
-    # print(f"Time miner training metrics: {end_time - start_time:.2f} seconds")
+    start_time = time.time()
+    df_train = get_miner_training_metrics(run_id, days).rename(columns={"_value": "loss"})
+    print("df_train columns:", df_train.columns.tolist())
+    print(df_train.head())    
+    end_time = time.time()
+    print(f"Time miner training metrics: {end_time - start_time:.2f} seconds")
 
-    # columns_needed = ["miner_uid", "run_id", "epoch", "loss"]
-    # df_clean_miner = (
-    #     df_train[columns_needed]
-    #     .dropna(subset=columns_needed)
-    #     .reset_index(drop=True)
-    # )
-    # df_clean_miner = df_clean_miner[df_clean_miner["loss"] > 0.0]
-    # df_clean_miner["epoch"] = df_clean_miner["epoch"].astype(int)
-    # df_clean_miner = df_clean_miner.sort_values(by=["epoch", "miner_uid"]).reset_index(drop=True)
+    columns_needed = ["miner_uid", "run_id", "epoch", "loss"]
+    df_clean_miner = (
+        df_train[columns_needed]
+        .dropna(subset=columns_needed)
+        .reset_index(drop=True)
+    )
+    df_clean_miner = df_clean_miner[df_clean_miner["loss"] > 0.0]
+    df_clean_miner["epoch"] = df_clean_miner["epoch"].astype(int)
+    df_clean_miner = df_clean_miner.sort_values(by=["epoch", "miner_uid"]).reset_index(drop=True)
 
     start_time = time.time()
     df_allreduce = get_validator_allreduce_operations_metrics(run_id, days)
@@ -137,7 +137,7 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
     end_time = time.time()
     print(f"Time validator allreduce metrics: {end_time - start_time:.2f} seconds")
 
-    exit(1)
+    # exit(1)
 
     columns_needed_vali = ["validator_uid", "epoch", "participating_miners"]
     df_clean_vali = (
@@ -202,10 +202,10 @@ def generate_graph_data(run_id: str = "6") -> dict:
         "loss_graph": losses_data
     }
 
-    # # Save JSON
-    # json_path = "/media/jorrit/ssd/bittensor/38_training/webpage_dt/graph_data/influx/graphs_data.json"
-    # with open(json_path, "w") as f:
-    #     json.dump(output, f, indent=2)
+    # Save JSON
+    json_path = "/media/jorrit/ssd/bittensor/38_training/webpage_dt/graph_data/influx/graphs_data.json"
+    with open(json_path, "w") as f:
+        json.dump(output, f, indent=2)
 
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     print(f"✅ combined_graph dict created at {now_utc}")

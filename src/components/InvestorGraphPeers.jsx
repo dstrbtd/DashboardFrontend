@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import websocketConfig from '../config/websocketUrls'; 
+import websocketConfig from '../config/websocketUrls';
 
 ChartJS.register(
   CategoryScale,
@@ -40,9 +40,19 @@ export default function InvestorGraphPeers() {
         const validatorUIDs = Object.keys(data.validators || {});
         if (validatorUIDs.length === 0) return;
 
-        const firstValidator = data.validators[validatorUIDs[0]];
-        const epochs = firstValidator.peers.epoch;
-        const peerCounts = firstValidator.peers.count;
+        // Pick validator with most epochs
+        let selectedValidator = data.validators[validatorUIDs[0]];
+        for (const uid of validatorUIDs) {
+          if ((data.validators[uid]?.peers?.epoch?.length || 0) >
+              (selectedValidator?.peers?.epoch?.length || 0)) {
+            selectedValidator = data.validators[uid];
+          }
+        }
+
+        if (!selectedValidator?.peers?.epoch || !selectedValidator?.peers?.count) return;
+
+        const epochs = selectedValidator.peers.epoch;
+        const peerCounts = selectedValidator.peers.count;
 
         const formattedData = {
           labels: epochs,
@@ -50,8 +60,8 @@ export default function InvestorGraphPeers() {
             {
               label: 'Number of Peers',
               data: peerCounts,
-              borderColor: '#000000',
-              backgroundColor: 'transparent',
+              borderColor: '#ff4c4c',
+              backgroundColor: 'rgba(255, 76, 76, 0.3)',
               tension: 0.4,
               pointRadius: 3,
               yAxisID: 'y',
@@ -66,13 +76,13 @@ export default function InvestorGraphPeers() {
             chartRef.current.resize();
           }
         }, 300);
-      } catch (err) {
-        console.error('Error parsing WebSocket message in InvestorGraphPeers:', err);
+      } catch {
+        // silently ignore parse errors
       }
     };
 
-    ws.onerror = (err) => {
-      console.error('WebSocket error in InvestorGraphPeers:', err);
+    ws.onerror = () => {
+      // silently ignore errors here
     };
 
     return () => {
@@ -86,7 +96,6 @@ export default function InvestorGraphPeers() {
         chartRef.current.resize();
       }
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -107,9 +116,7 @@ export default function InvestorGraphPeers() {
       },
       legend: {
         display: false,
-        labels: {
-          color: '#e0e0e0',
-        },
+        labels: { color: '#e0e0e0' },
       },
       tooltip: {
         backgroundColor: '#333',
@@ -141,9 +148,8 @@ export default function InvestorGraphPeers() {
     <div style={{ width: '100%', height: '100%' }}>
       {chartData ? (
         <Line
-          ref={(el) => {
-            if (el) chartRef.current = el.chartInstance ?? el;
-          }}
+          key={JSON.stringify(chartData)}
+          ref={chartRef}
           data={chartData}
           options={options}
         />
