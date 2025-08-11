@@ -2,22 +2,23 @@ import asyncio
 import json
 import websockets
 from pathlib import Path
-from queryInfluxData import generate_graph_data  # Import the function
+from queryInfluxData import generate_graph_data  # Import your function
+from websockets.exceptions import ConnectionClosedOK
+from datetime import datetime, timezone
 
 last_data = None
 last_epoch = -1
 
 connected = set()
 
+
 async def notify_clients():
     global last_data, last_epoch
 
     while True:
         try:
-            # Generate data to check if a new epoch is available
-            data = generate_graph_data()
+            data = await asyncio.to_thread(generate_graph_data)
 
-            # Extract latest epoch from the result
             all_epochs = []
             for miner_data in data.get("miners", {}).values():
                 all_epochs += miner_data.get("epoch", [])
@@ -25,22 +26,20 @@ async def notify_clients():
             if all_epochs:
                 new_max_epoch = max(all_epochs)
             else:
-                new_max_epoch = last_epoch  # no epoch data, keep old
+                new_max_epoch = last_epoch
 
             if new_max_epoch > last_epoch:
-                # New data detected!
                 print(f"📈 New epoch {new_max_epoch} detected (previous was {last_epoch})")
                 last_data = json.dumps(data)
                 last_epoch = new_max_epoch
             else:
                 print(f"⏳ No new epoch (latest: {last_epoch}) — serving cached data")
 
-            # Send the latest (cached or fresh) data
             for ws in connected.copy():
                 try:
                     await ws.send(last_data)
                 except Exception:
-                    connected.remove(ws)
+                    connected.discard(ws)
 
         except Exception as e:
             print("Error in notify_clients:", e)
@@ -49,26 +48,49 @@ async def notify_clients():
 
 
 async def handler(websocket):
-    print(f"Client connected: {websocket.remote_address}")
-    connected.add(websocket)
     try:
-        # Send cached data on connection (if any)
+        print(f"Client connected: {websocket.remote_address}")
+        connected.add(websocket)
+
         if last_data:
             await websocket.send(last_data)
 
         await websocket.wait_closed()
+
+    except ConnectionClosedOK:
+        pass
+    except Exception as e:
+        print(f"WebSocket client error: {e}")
     finally:
+        connected.discard(websocket)
         print(f"Client disconnected: {websocket.remote_address}")
-        connected.remove(websocket)
 
 
 async def main():
-    # "0.0.0.0" # means accessible from any IP
-    # "127.0.0.1" # loopback so only accessible from the same machine
+    global last_data, last_epoch
+
+    print("🔄 Preloading initial graph data (this may take some time)...")
+    data = await asyncio.to_thread(generate_graph_data)
+    last_data = json.dumps(data)
+
+    all_epochs = []
+    for miner_data in data.get("miners", {}).values():
+        all_epochs += miner_data.get("epoch", [])
+    last_epoch = max(all_epochs) if all_epochs else -1
+
     server_ip = "0.0.0.0"
-    async with websockets.serve(handler, server_ip, 8765): 
-        print(f"WebSocket server started on ws://{server_ip}:8765")
+    port = 8765
+    print(f"Starting WebSocket server on ws://{server_ip}:{port}")
+
+    async with websockets.serve(
+        handler,
+        server_ip,
+        port,
+        ping_interval=20,
+        ping_timeout=20,
+    ):
         await notify_clients()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

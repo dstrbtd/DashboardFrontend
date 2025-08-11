@@ -27,6 +27,7 @@ export default function InvestorGraphPeers() {
   const wsRef = useRef(null);
   const [chartData, setChartData] = useState(null);
   const [runId, setRunId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const ws = new WebSocket(websocketConfig.WS_URL);
@@ -73,12 +74,6 @@ export default function InvestorGraphPeers() {
         };
 
         setChartData(formattedData);
-
-        setTimeout(() => {
-          if (chartRef.current) {
-            chartRef.current.resize();
-          }
-        }, 300);
       } catch {
         // silently ignore parse errors
       }
@@ -92,6 +87,25 @@ export default function InvestorGraphPeers() {
       ws.close();
     };
   }, []);
+
+  // Force remount on new chartData to ensure full chart redraw
+  useEffect(() => {
+    if (chartData) {
+      setRefreshKey(k => k + 1);
+    }
+  }, [chartData]);
+
+  // Resize and update chart on refreshKey change (new data)
+  useEffect(() => {
+    if (chartRef.current) {
+      try {
+        chartRef.current.resize();
+        chartRef.current.update();
+      } catch (e) {
+        // ignore errors if chart not yet ready
+      }
+    }
+  }, [refreshKey]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -198,7 +212,7 @@ export default function InvestorGraphPeers() {
       <div style={{ flexGrow: 1 }}>
         {chartData ? (
           <Line
-            key={JSON.stringify(chartData)}
+            key={refreshKey}
             ref={chartRef}
             data={chartData}
             options={options}
