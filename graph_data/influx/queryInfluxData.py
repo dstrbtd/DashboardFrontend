@@ -202,8 +202,7 @@ def generate_graph_data(run_id: str = "6") -> dict:
         "loss_graph": losses_data
     }
 
-    # Save JSON
-    json_path = "/media/jorrit/ssd/bittensor/38_training/webpage_dt/graph_data/influx/graphs_data.json"
+    json_path = "processed/graphs_data.json"
     with open(json_path, "w") as f:
         json.dump(output, f, indent=2)
 

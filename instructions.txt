@@ -1,6 +1,9 @@
 git push origin main --force
 git push origin main
 git push myfork feature/dashboard
+git push origin main && git push myfork main:feature/dashboard
+
+
 
 Local debug:
 npm run dev

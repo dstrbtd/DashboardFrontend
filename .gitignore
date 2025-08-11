@@ -26,3 +26,4 @@ dist-ssr
 __pycache__/
 *.pyc
 
+graph_data/influx/processed/graphs_data.json

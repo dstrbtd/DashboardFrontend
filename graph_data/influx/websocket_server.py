@@ -7,9 +7,6 @@ from queryInfluxData import generate_graph_data  # Import the function
 last_data = None
 last_epoch = -1
 
-
-JSON_PATH = Path("/media/jorrit/ssd/bittensor/38_training/webpage/miner-dashboard/public/miner_graph_data.json")
-
 connected = set()
 
 async def notify_clients():
