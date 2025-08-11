@@ -11,7 +11,7 @@ warnings.simplefilter("ignore", MissingPivotFunction)
 
 counter = 0
 
-# ----------------------------------------
+# -----------------------------------------
 # 1. Losses Data Retrieval
 # ----------------------------------------
 def get_global_model_losses_influx_data(run_id: str) -> dict:

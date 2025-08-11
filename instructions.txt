@@ -1,3 +1,7 @@
+git push origin main --force
+git push origin main
+git push myfork feature/dashboard
+
 Local debug:
 npm run dev
 # websocket runs on Frankfurt ngrok via MinerGraph.jsx:
