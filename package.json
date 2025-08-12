@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "ag-grid-enterprise": "^34.1.1",
     "chart.js": "^4.5.0",
     "d3-geo": "^3.1.1",
     "prop-types": "^15.8.1",

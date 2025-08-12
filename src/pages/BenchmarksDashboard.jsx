@@ -3,20 +3,29 @@ import '../App.css';
 
 const BenchmarksDashboard = () => {
   return (
-    <div className="app-container">
-      <h1 className="heading-3">Benchmarks</h1>
-      <p>This is the Benchmarks page. You can add graphs, tables, or metrics here.</p>
+    <div
+      className="app-container"
+      style={{
+        height: '100vh',
+        width: '100%',
+        padding: 0,
+        marginLeft: '700px',
+      }}
+    >
+      <h1 className="heading-3" style={{ marginBottom: '1rem' }}>
+        Benchmarks
+      </h1>
 
-      {/* Example section placeholder */}
-      <h2 className="heading-3">Example Metric vs Step</h2>
-      <div className="graph-wrapper">
-        <div className="graph-placeholder">
-          {/* Replace this with your chart component */}
-          <p style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>
-            Graph placeholder
-          </p>
-        </div>
-      </div>
+      <iframe
+        src="https://oakland-streets-pollution-constraints.trycloudflare.com"
+        title="Validator Dashboard"
+        style={{
+          border: 'none',
+          width: '500%',
+          height: '85vh',
+          minHeight: '500px',
+        }}
+      />
     </div>
   );
 };
