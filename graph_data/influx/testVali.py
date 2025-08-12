@@ -24,9 +24,17 @@ def test_allreduce_query(run_id="6", days=1):
     start_time = time.time()
     df = query_api.query_data_frame(flux)
     end_time = time.time()
-    print(f"Query took {end_time - start_time:.2f} seconds")
-    print(f"Columns: {df.columns.tolist() if isinstance(df, pd.DataFrame) else 'No DataFrame'}")
-    print(df.head() if isinstance(df, pd.DataFrame) else df)
+
+    # Ensure df is always a single DataFrame
+    if isinstance(df, list):
+        df = pd.concat(df, ignore_index=True)
+
+    if isinstance(df, pd.DataFrame):
+        print(f"Query took {end_time - start_time:.2f} seconds")
+        print(f"Columns: {df.columns.tolist()}")
+        print(df)
+    else:
+        print("No DataFrame returned:", df)
 
 if __name__ == "__main__":
     print("Testing with days=1")

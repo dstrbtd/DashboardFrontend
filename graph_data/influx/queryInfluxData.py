@@ -69,7 +69,7 @@ def get_global_model_losses_influx_data(run_id: str) -> dict:
     }
 
 
-def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dict:
+def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> dict:
     """
     Retrieve miner and validator training metrics for given run_id,
     with configurable time range (in days).
@@ -85,6 +85,12 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
     )
     query_api = client.query_api()
 
+    def ensure_dataframe(df):
+        """Ensure the result is always a single DataFrame."""
+        if isinstance(df, list):
+            df = pd.concat(df, ignore_index=True)
+        return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
+
     def get_miner_training_metrics(run_id: str, days: int):
         flux = f'''
         from(bucket: "distributed-training-metrics")
@@ -95,8 +101,7 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
           |> group(columns: ["miner_uid", "epoch", "run_id"])
           |> mean()
         '''
-        df = query_api.query_data_frame(flux)
-        return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
+        return ensure_dataframe(query_api.query_data_frame(flux))
 
     def get_validator_allreduce_operations_metrics(run_id: str, days: int):
         flux = f'''
@@ -110,15 +115,14 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
           |> pivot(rowKey: ["epoch", "validator_uid"], columnKey: ["_field"], valueColumn: "_value")
           |> sort(columns: ["epoch"])
         '''
-        df = query_api.query_data_frame(flux)
-        return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
+        return ensure_dataframe(query_api.query_data_frame(flux))
 
+    # --- Miner metrics ---
     start_time = time.time()
     df_train = get_miner_training_metrics(run_id, days).rename(columns={"_value": "loss"})
     print("df_train columns:", df_train.columns.tolist())
-    print(df_train.head())    
-    end_time = time.time()
-    print(f"Time miner training metrics: {end_time - start_time:.2f} seconds")
+    print(df_train.head())
+    print(f"Time miner training metrics: {time.time() - start_time:.2f} seconds")
 
     columns_needed = ["miner_uid", "run_id", "epoch", "loss"]
     df_clean_miner = (
@@ -130,14 +134,12 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
     df_clean_miner["epoch"] = df_clean_miner["epoch"].astype(int)
     df_clean_miner = df_clean_miner.sort_values(by=["epoch", "miner_uid"]).reset_index(drop=True)
 
+    # --- Validator metrics ---
     start_time = time.time()
     df_allreduce = get_validator_allreduce_operations_metrics(run_id, days)
     print("Allreduce columns:", df_allreduce.columns.tolist())
     print(df_allreduce.head())
-    end_time = time.time()
-    print(f"Time validator allreduce metrics: {end_time - start_time:.2f} seconds")
-
-    # exit(1)
+    print(f"Time validator allreduce metrics: {time.time() - start_time:.2f} seconds")
 
     columns_needed_vali = ["validator_uid", "epoch", "participating_miners"]
     df_clean_vali = (
@@ -151,14 +153,14 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
     df_clean_vali = df_clean_vali[["validator_uid", "run_id", "epoch", "participating_miners"]]
     df_clean_vali = df_clean_vali.sort_values("epoch").reset_index(drop=True)
 
-    # df_merged = pd.merge(df_clean_miner, df_clean_vali, on="epoch", how="inner")
+    # Merge miner + validator data
     df_merged = pd.merge(df_clean_miner, df_clean_vali, on="epoch", how="outer")
     df_merged = df_merged.sort_values(by="epoch").reset_index(drop=True)
 
-
-    unique_miners = df_merged["miner_uid"].unique()
+    # Random sample of miners for display
+    unique_miners = df_merged["miner_uid"].dropna().unique()
     num_miners_to_sample = min(10, len(unique_miners))
-    random_miners = np.random.choice(unique_miners, size=num_miners_to_sample, replace=False)
+    random_miners = np.random.choice(unique_miners, size=num_miners_to_sample, replace=False) if len(unique_miners) else []
 
     df_filtered = df_merged[df_merged["miner_uid"].isin(random_miners)]
 
@@ -184,7 +186,6 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 1) -> dic
         "miners": miners_dict,
         "validators": validators_dict
     }
-
 
 # ----------------------------------------
 # 3. Combined Data Orchestration
