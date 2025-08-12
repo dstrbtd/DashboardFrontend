@@ -12,6 +12,46 @@ warnings.simplefilter("ignore", MissingPivotFunction)
 counter = 0
 
 # -----------------------------------------
+# Helper to get latest run_id dynamically
+# -----------------------------------------
+def get_latest_run_id_from_validator_metrics(days: int = 7) -> str:
+    """
+    Query recent validator allreduce_operations to find the highest run_id
+    seen in the last `days` days, returned as string.
+    """
+    client = InfluxDBClient(
+        url="http://161.97.156.125:8086",
+        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
+        org="distributed-training",
+        timeout=60_000
+    )
+    query_api = client.query_api()
+
+    flux = f'''
+    from(bucket: "distributed-training-metrics")
+      |> range(start: -{days}d)
+      |> filter(fn: (r) => r._measurement == "allreduce_operations")
+      |> filter(fn: (r) => exists r.run_id)
+      |> keep(columns: ["run_id"])
+      |> group()
+      |> distinct(column: "run_id")
+      |> sort(columns: ["run_id"], desc: true)
+      |> limit(n:1)
+    '''
+
+    results = query_api.query(org="distributed-training", query=flux)
+
+    for table in results:
+        for record in table.records:
+            max_run_id = record.values.get("run_id")
+            if max_run_id is not None:
+                return str(max_run_id)
+
+    # fallback default run_id
+    return "6"
+
+
+# -----------------------------------------
 # 1. Losses Data Retrieval
 # ----------------------------------------
 def get_global_model_losses_influx_data(run_id: str) -> dict:
@@ -153,10 +193,6 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
     df_clean_vali = df_clean_vali[["validator_uid", "run_id", "epoch", "participating_miners", "learning_rate"]]
     df_clean_vali = df_clean_vali.sort_values("epoch").reset_index(drop=True)
 
-    # df_clean_vali['learning_rate'] = df_clean_vali['learning_rate'].apply(
-    #     lambda v: None if (isinstance(v, float) and np.isnan(v)) else v
-    # )    
-
     # Merge miner + validator data
     df_merged = pd.merge(df_clean_miner, df_clean_vali, on="epoch", how="outer")
     df_merged = df_merged.sort_values(by="epoch").reset_index(drop=True)
@@ -184,7 +220,6 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
             },
             "learning_rate": {
                 "epoch": group["epoch"].tolist(),
-                # Replace any np.nan with None here explicitly:
                 "value": [None if (isinstance(v, float) and np.isnan(v)) else v for v in group["learning_rate"].tolist()]
             }
         }
@@ -200,10 +235,17 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
 # ----------------------------------------
 # 3. Combined Data Orchestration
 # ----------------------------------------
-def generate_graph_data(run_id: str = "6") -> dict:
+def generate_graph_data(run_id: str = None) -> dict:
     """
     Combine miner/validator graph data with losses data into one dictionary.
+    If run_id is None, fetch the latest run_id dynamically.
     """
+    if run_id is None:
+        run_id = get_latest_run_id_from_validator_metrics(days=7)
+        print(f"No run_id provided, using latest run_id from validator metrics: {run_id}")
+    else:
+        print(f"Using provided run_id: {run_id}")
+
     influx_data = get_miner_and_validator_influx_data(run_id)
     losses_data = get_global_model_losses_influx_data(run_id)
 
