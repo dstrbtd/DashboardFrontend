@@ -2,7 +2,7 @@ from influxdb_client import InfluxDBClient
 import pandas as pd
 import time
 
-def test_allreduce_query(run_id="6", days=5):
+def test_allreduce_query(run_id="6", days=1):
     client = InfluxDBClient(
         url="http://161.97.156.125:8086",
         token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
