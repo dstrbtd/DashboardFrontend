@@ -141,17 +141,21 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
     print(df_allreduce.head())
     print(f"Time validator allreduce metrics: {time.time() - start_time:.2f} seconds")
 
-    columns_needed_vali = ["validator_uid", "epoch", "participating_miners"]
+    columns_needed_vali = ["validator_uid", "epoch", "participating_miners", "learning_rate"]
     df_clean_vali = (
         df_allreduce[columns_needed_vali]
-        .dropna(subset=columns_needed_vali)
+        .dropna(subset=["validator_uid", "epoch", "participating_miners"])  # don't drop NaNs in learning_rate
         .reset_index(drop=True)
     )
     df_clean_vali["participating_miners"] = df_clean_vali["participating_miners"].round().astype(int)
     df_clean_vali["epoch"] = df_clean_vali["epoch"].astype(int)
     df_clean_vali["run_id"] = run_id
-    df_clean_vali = df_clean_vali[["validator_uid", "run_id", "epoch", "participating_miners"]]
+    df_clean_vali = df_clean_vali[["validator_uid", "run_id", "epoch", "participating_miners", "learning_rate"]]
     df_clean_vali = df_clean_vali.sort_values("epoch").reset_index(drop=True)
+
+    # df_clean_vali['learning_rate'] = df_clean_vali['learning_rate'].apply(
+    #     lambda v: None if (isinstance(v, float) and np.isnan(v)) else v
+    # )    
 
     # Merge miner + validator data
     df_merged = pd.merge(df_clean_miner, df_clean_vali, on="epoch", how="outer")
@@ -177,10 +181,16 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
             "peers": {
                 "epoch": group["epoch"].tolist(),
                 "count": group["participating_miners"].tolist()
+            },
+            "learning_rate": {
+                "epoch": group["epoch"].tolist(),
+                # Replace any np.nan with None here explicitly:
+                "value": [None if (isinstance(v, float) and np.isnan(v)) else v for v in group["learning_rate"].tolist()]
             }
         }
         for validator_uid, group in df_clean_vali.groupby("validator_uid")
     }
+
 
     return {
         "miners": miners_dict,

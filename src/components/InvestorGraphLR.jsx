@@ -10,56 +10,119 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import websocketConfig from '../config/websocketUrls';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function InvestorGraphLR() {
   const chartRef = useRef(null);
+  const wsRef = useRef(null);
   const [chartData, setChartData] = useState(null);
+  const [runId, setRunId] = useState(null);
 
   useEffect(() => {
-    // Load JSON from public folder
-    fetch('/learning_rate.json')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        return res.json();
-      })
-      .then((learningRateData) => {
-        // Extract the "Run 6" object from the JSON
-        const runData = learningRateData['Run 6'];
+    const ws = new WebSocket(websocketConfig.WS_URL);
+    wsRef.current = ws;
 
-        // Extract and sort steps ascending numerically
-        const steps = Object.keys(runData)
-          .map((key) => Number(key.replace('Outer Step ', '')))
-          .sort((a, b) => a - b);
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setRunId(data.run_id || null);
 
-        const labels = steps;
-        const data = steps.map((step) => runData[`Outer Step ${step}`]);
+        const validatorUIDs = Object.keys(data.validators || {});
+        if (validatorUIDs.length === 0) return;
 
-        setChartData({
-          labels,
+        // Pick validator with most epochs for learning rate
+        let selectedValidator = data.validators[validatorUIDs[0]];
+        for (const uid of validatorUIDs) {
+          if (
+            (data.validators[uid]?.learning_rate?.epoch?.length || 0) >
+            (selectedValidator?.learning_rate?.epoch?.length || 0)
+          ) {
+            selectedValidator = data.validators[uid];
+          }
+        }
+
+        if (
+          !selectedValidator?.learning_rate?.epoch ||
+          !selectedValidator?.learning_rate?.value
+        )
+          return;
+
+        const epochs = selectedValidator.learning_rate.epoch;
+
+        // Map non-number (null or others) to null for Chart.js compatibility
+        const lrValues = selectedValidator.learning_rate.value.map((v) =>
+          typeof v === 'number' ? v : null
+        );
+
+        const formattedData = {
+          labels: epochs,
           datasets: [
             {
               label: 'Learning Rate',
-              data,
-              borderColor: 'rgba(246, 246, 247, 1)',
+              data: lrValues,
+              borderColor: '#f6f6f7',
               backgroundColor: 'transparent',
               tension: 0.4,
-              pointRadius: 0, // hide points normally
+              pointRadius: 0,
+              hoverRadius: 5,
+              yAxisID: 'y',
             },
           ],
-        });
-      })
-      .catch((err) => {
-        console.error('Error loading learning_rate.json:', err);
-      });
+        };
+
+        setChartData(formattedData);
+
+        setTimeout(() => {
+          if (chartRef.current) {
+            chartRef.current.resize();
+          }
+        }, 300);
+      } catch {
+        // silently ignore parse errors
+      }
+    };
+
+    ws.onerror = () => {
+      // silently ignore errors
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (chartRef.current) {
+        chartRef.current.resize();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      title: { display: false },
+      title: {
+        display: false,
+        text: runId
+          ? `Run ${runId} - Learning Rate Over Outer Steps`
+          : 'Learning Rate Over Outer Steps',
+        color: '#eee',
+        font: { size: 16, family: "'IBM Plex Mono', monospace" },
+      },
       legend: { display: false },
       tooltip: {
         enabled: true,
@@ -70,44 +133,31 @@ export default function InvestorGraphLR() {
         caretSize: 5,
         displayColors: false,
         callbacks: {
-          label: function (context) {
+          label: (context) => {
             const value = context.parsed.y;
-            return `Learning Rate: ${value.toFixed(5)}`;
+            return value !== null
+              ? `Learning Rate: ${value.toExponential(5)}`
+              : 'Learning Rate: N/A';
           },
         },
       },
     },
-    layout: {
-      padding: 10,
-    },
-    interaction: {
-      mode: 'nearest',
-      intersect: false,
-    },
+    layout: { padding: 10 },
+    interaction: { mode: 'nearest', intersect: false },
     scales: {
       x: {
         title: { display: true, text: 'Outer Step', color: '#eee' },
         ticks: { color: '#eee' },
-        grid: {
-          color: 'transparent',
-          borderColor: 'transparent',
-        },
+        grid: { color: 'transparent', borderColor: 'transparent' },
       },
       y: {
         title: { display: false, text: 'Learning Rate', color: '#eee' },
         ticks: { color: '#eee' },
-        grid: {
-          color: 'transparent',
-          borderColor: 'transparent',
-        },
+        grid: { color: 'transparent', borderColor: 'transparent' },
       },
     },
     elements: {
-      line: {
-        borderColor: '#eee',
-        borderWidth: 1.5,
-        tension: 0.3,
-      },
+      line: { borderColor: '#eee', borderWidth: 1.5, tension: 0.4 },
       point: {
         radius: 0,
         hoverRadius: 5,
@@ -118,30 +168,23 @@ export default function InvestorGraphLR() {
   };
 
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <h3
         className="text-ibm"
-        style={{
-          color: '#eee',
-          marginBottom: 8,
-          textAlign: 'left',
-          flexShrink: 0,
-        }}
+        style={{ color: '#eee', marginBottom: 8, textAlign: 'left' }}
       >
         Learning Rate
       </h3>
       <div style={{ flexGrow: 1 }}>
         {chartData ? (
-          <Line ref={chartRef} data={chartData} options={options} />
+          <Line
+            key={JSON.stringify(chartData)}
+            ref={chartRef}
+            data={chartData}
+            options={options}
+          />
         ) : (
-          <p>Loading...</p>
+          <p style={{ color: '#eee' }}>Loading learning rate chart...</p>
         )}
       </div>
     </div>
