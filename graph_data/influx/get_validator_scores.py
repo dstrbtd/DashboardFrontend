@@ -220,5 +220,5 @@ def filter_and_reload_data(selected_uids, n_intervals):
         return [], f"Last updated: error ({e})"
 
 if __name__ == "__main__":
-    app.run(debug=True, port=22177)
+    app.run(debug=False, port=22177)
     
