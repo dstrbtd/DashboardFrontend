@@ -31,8 +31,13 @@ It supports local development, secure deployment via Vercel, and HTTPS WebSocket
 
 1. **Clone the repository**
 ```bash
-git clone git@github.com:dstrbtd/DashboardFrontend.git
+git clone https://github.com/dstrbtd/DashboardFrontend/
 cd DashboardFrontend
+```
+
+3. **Create Python virtual environment**
+```bash
+python3 -m venv .venv
 ```
 
 2. **Install Python dependencies**
@@ -40,11 +45,10 @@ cd DashboardFrontend
 pip install websockets pandas influxdb-client
 ```
 
-2. **Install Node dependencies**
+3. **Install Node dependencies**
 ```bash
 npm install
 ```
-
 
 4. **Run the WebSocket server**
 ```bash
@@ -53,7 +57,22 @@ python graph_data/influx/websocket_server.py
 # Press Ctrl+b, then d to detach
 ```
 
-4. **Test the webpage locally**
+5. **Install npm**
+```bash
+apt update && apt-get update && apt install npm
+```
+
+6. **Install npm**
+```bash
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+  && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
+  | sudo tee /etc/apt/sources.list.d/ngrok.list \
+  && sudo apt update \
+  && sudo apt install ngrok
+```
+
+7. **Test the webpage locally**
 ```bash
 npm run dev  # Runs on http://localhost:5173/
 ```

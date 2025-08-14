@@ -1,6 +1,7 @@
 from influxdb_client import InfluxDBClient
 import pandas as pd
 import numpy as np
+import os
 import json
 import warnings
 from influxdb_client.client.warnings import MissingPivotFunction
@@ -43,7 +44,7 @@ def get_latest_run_id_from_validator_metrics(days: int = 7) -> str:
 
     for table in results:
         for record in table.records:
-            max_run_id = record.values.get("run_id")
+            max_run_id = record.values.get("_value")
             if max_run_id is not None:
                 return str(max_run_id)
 
@@ -256,6 +257,8 @@ def generate_graph_data(run_id: str = None) -> dict:
     }
 
     json_path = "processed/graphs_data.json"
+    if not os.path.exists("processed"):
+        os.makedirs("processed")
     with open(json_path, "w") as f:
         json.dump(output, f, indent=2)
 

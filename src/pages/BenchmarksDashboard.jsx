@@ -12,17 +12,22 @@ const BenchmarksDashboard = () => {
         marginLeft: '700px',
       }}
     >
-      <h1 className="heading-3" style={{ marginBottom: '1rem' }}>
-        Benchmarks
+      <h1
+        className="heading-3"
+        style={{
+          marginBottom: '1rem',
+          width: '100%',
+        }}>
+        Miner Scores
       </h1>
 
       <iframe
-        src="https://oakland-streets-pollution-constraints.trycloudflare.com"
+        src="http://127.0.0.1:22178"
         title="Validator Dashboard"
         style={{
           border: 'none',
           width: '500%',
-          height: '85vh',
+          height: '100%',
           minHeight: '500px',
         }}
       />

@@ -9,6 +9,14 @@ import '../styles/InvestorDashboard.css';
 const InvestorDashboard = () => {
   return (
     <div className="app-container investor-dashboard-container">
+      <h1
+        className="heading-3"
+        style={{
+          marginBottom: '1rem',
+          width: '100%',
+        }}>
+        DSTRBTD
+      </h1>
       <div className="graphs-grid">
         <div className="graph-item">
           <InvestorGraphPerplexity />
