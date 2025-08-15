@@ -68,12 +68,19 @@ def get_global_model_losses_influx_data(run_id: str) -> dict:
     query_api = client.query_api()
 
     query = f"""
+    import "strings"
     from(bucket: "distributed-training-metrics")
-      |> range(start: -365d)
-      |> filter(fn: (r) => r._measurement == "evaluation_metrics")
-      |> filter(fn: (r) => r.tag == "{run_id}.0.0" or r.tag =~ /^{run_id}\./)
-      |> filter(fn: (r) => r.task == "fineweb")
-      |> sort(columns: ["_time"])
+        |> range(start: -365d)
+        |> filter(fn: (r) => r._measurement == "evaluation_metrics")
+        |> filter(fn: (r) => r.tag == "{run_id}.0.0" or r.tag =~ /^{run_id}\./)
+        |> filter(fn: (r) => r.task == "fineweb")
+        |> map(fn: (r) => ({{
+                r with outer_step: int(v: strings.split(v: r.tag, t: ".")[1])
+            }}))
+        |> group(columns: ["outer_step"])
+        |> sort(columns: ["_time"], desc: true)  // newest first
+        |> unique(column: "outer_step")          // keep only 1 per step
+        |> sort(columns: ["outer_step"])         // re-sort by step ascending
     """
 
     results = query_api.query(org="distributed-training", query=query)
@@ -110,7 +117,7 @@ def get_global_model_losses_influx_data(run_id: str) -> dict:
     }
 
 
-def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> dict:
+def get_miner_and_validator_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> dict:
     """
     Retrieve miner and validator training metrics for given run_id,
     with configurable time range (in days).
@@ -132,35 +139,38 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
             df = pd.concat(df, ignore_index=True)
         return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
 
-    def get_miner_training_metrics(run_id: str, days: int):
+    def get_miner_training_metrics(run_id: str, epoch: int, days: int):
         flux = f'''
         from(bucket: "distributed-training-metrics")
-          |> range(start: -{days}d)
-          |> filter(fn: (r) => r._measurement == "training_metrics")
-          |> filter(fn: (r) => r._field == "loss")
-          |> filter(fn: (r) => r["run_id"] == "{run_id}")
-          |> group(columns: ["miner_uid", "epoch", "run_id"])
-          |> mean()
+            |> range(start: -{days}d)
+            |> filter(fn: (r) => r._measurement == "training_metrics")
+            |> filter(fn: (r) => r._field == "loss")
+            |> filter(fn: (r) => r["run_id"] == "{run_id}")
+            |> group(columns: ["miner_uid", "epoch", "run_id"])
+            |> mean()
         '''
         return ensure_dataframe(query_api.query_data_frame(flux))
 
-    def get_validator_allreduce_operations_metrics(run_id: str, days: int):
+    def get_validator_allreduce_operations_metrics(run_id: str, epoch: int, days: int):
         flux = f'''
         from(bucket: "distributed-training-metrics")
-          |> range(start: -{days}d)
-          |> filter(fn: (r) => r._measurement == "allreduce_operations")
-          |> filter(fn: (r) => exists r.epoch and exists r.validator_uid and exists r._value)
-          |> filter(fn: (r) => r["run_id"] == "{run_id}")
-          |> group(columns: ["validator_uid", "epoch", "run_id", "_field"])
-          |> mean()
-          |> pivot(rowKey: ["epoch", "validator_uid"], columnKey: ["_field"], valueColumn: "_value")
-          |> sort(columns: ["epoch"])
+            |> range(start: -{days}d)
+            |> filter(fn: (r) => r._measurement == "allreduce_operations")
+            |> filter(fn: (r) => exists r.epoch and exists r.validator_uid and exists r._value)
+            |> filter(fn: (r) => r["run_id"] == "{run_id}")
+            |> filter(fn: (r) => int(v: r.epoch) <= {epoch})
+            |> filter(fn: (r) => r["validator_uid"] == "25")
+            |> drop(columns: ["_start", "_stop"])
+            |> group(columns: ["validator_uid", "epoch", "run_id", "_field"])
+            |> max()
+            |> pivot(rowKey: ["epoch", "validator_uid"], columnKey: ["_field"], valueColumn: "_value")
+            |> sort(columns: ["epoch"])
         '''
         return ensure_dataframe(query_api.query_data_frame(flux))
 
     # --- Miner metrics ---
     start_time = time.time()
-    df_train = get_miner_training_metrics(run_id, days).rename(columns={"_value": "loss"})
+    df_train = get_miner_training_metrics(run_id, epoch, days).rename(columns={"_value": "loss"})
     print("df_train columns:", df_train.columns.tolist())
     print(df_train.head())
     print(f"Time miner training metrics: {time.time() - start_time:.2f} seconds")
@@ -177,7 +187,7 @@ def get_miner_and_validator_influx_data(run_id: str = "6", days: int = 30) -> di
 
     # --- Validator metrics ---
     start_time = time.time()
-    df_allreduce = get_validator_allreduce_operations_metrics(run_id, days)
+    df_allreduce = get_validator_allreduce_operations_metrics(run_id, epoch, days)
     print("Allreduce columns:", df_allreduce.columns.tolist())
     print(df_allreduce.head())
     print(f"Time validator allreduce metrics: {time.time() - start_time:.2f} seconds")
@@ -247,8 +257,8 @@ def generate_graph_data(run_id: str = None) -> dict:
     else:
         print(f"Using provided run_id: {run_id}")
 
-    influx_data = get_miner_and_validator_influx_data(run_id)
     losses_data = get_global_model_losses_influx_data(run_id)
+    influx_data = get_miner_and_validator_influx_data(run_id, epoch = max(losses_data['outer_steps']) if losses_data['outer_steps'] != [] else 0)
 
     output = {
         "run_id": run_id,
