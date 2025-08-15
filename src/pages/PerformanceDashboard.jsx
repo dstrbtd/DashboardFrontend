@@ -46,14 +46,23 @@ const InvestorDashboard = () => {
   return (
     <div className="app-container investor-dashboard-container">
       <h1 className="heading-3" style={{ marginBottom: '1rem', width: '100%' }}>
-        DSTRBTD
+        Training Metrics
       </h1>
 
       {/* Info boxes row */}
       <div className="info-boxes-row">
-        <div className="info-box">Run:<br></br><br></br> {runId}</div>
-        <div className="info-box">Model Size:<br></br> {modelSize}</div>
-        <div className="info-box">Active Miners:<br></br> {activeMiners}</div>
+        <div className="info-box">
+          <div className="info-label">Run</div>
+          <div className="info-value">{runId}</div>
+        </div>
+        <div className="info-box">
+          <div className="info-label">Model Size</div>
+          <div className="info-value">{modelSize}</div>
+        </div>
+        <div className="info-box">
+          <div className="info-label">Active Miners</div>
+          <div className="info-value">{activeMiners}</div>
+        </div>
       </div>
 
       {/* Graphs grid */}

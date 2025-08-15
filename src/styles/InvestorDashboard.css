@@ -1,5 +1,19 @@
 /* InvestorDashboard.css */
 
+html, body, #root, .app {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.investor-dashboard-container {
+  padding: 1rem;
+  margin-left: 80px; /* offset for sidebar */
+  width: calc(100% - 80px); /* prevent horizontal scroll */
+  box-sizing: border-box;
+}
+
 .graphs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -25,11 +39,13 @@
 /* Investor Dashboard Grid */
 .investor-dashboard-container .graphs-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3rem 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 3rem;
   width: 100%;
-  max-width: 1200px; /* increased from 1050px */
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .investor-dashboard-container .graph-item {
@@ -48,4 +64,49 @@
   height: 100% !important;
   max-height: 360px; /* match container height */
   object-fit: contain;
+}
+
+.investor-dashboard-container h1 {
+  padding: 0 2rem;      /* match horizontal padding */
+  box-sizing: border-box;
+}
+
+.investor-dashboard-container {
+  width: 100%;
+  max-width: none;      /* remove default limit */
+  padding: 0 2rem;      /* even spacing on left/right */
+  box-sizing: border-box;
+}
+
+.info-boxes-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  width: 100%;
+  padding: 0;           /* padding handled by container */
+  box-sizing: border-box;
+}
+
+.info-box {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  text-align: center;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 150px;        /* keeps them from being too narrow */
+}
+
+.info-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  white-space: nowrap; /* keeps title on one line */
+}
+
+.info-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
 }
