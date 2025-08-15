@@ -7,9 +7,9 @@ const BenchmarksDashboard = () => {
       className="app-container"
       style={{
         height: '100vh',
-        width: '100%',
+        width: 'calc(100% - 80px)', // account for sidebar
+        marginLeft: '80px',         // same offset as investor dashboard
         padding: 0,
-        marginLeft: '700px',
       }}
     >
       <h1
@@ -22,11 +22,11 @@ const BenchmarksDashboard = () => {
       </h1>
 
       <iframe
-        src="http://127.0.0.1:22178"
+        src="https://370b53258dd5.ngrok-free.app"
         title="Validator Dashboard"
         style={{
           border: 'none',
-          width: '500%',
+          width: '100%',
           height: '100%',
           minHeight: '500px',
         }}

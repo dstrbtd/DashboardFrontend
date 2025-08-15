@@ -7,10 +7,19 @@ import warnings
 from influxdb_client.client.warnings import MissingPivotFunction
 from datetime import datetime, timezone
 import time
+import bittensor as bt
 
 warnings.simplefilter("ignore", MissingPivotFunction)
 
 counter = 0
+
+def get_active_miners() -> int:
+    metagraph = bt.metagraph(netuid=38)
+    active_miners = len([
+        x for x in range(metagraph.n)
+        if metagraph.axons[x].ip != "0.0.0.0" and metagraph.stake[x] <= 1000
+    ])
+    return active_miners
 
 # -----------------------------------------
 # Helper to get latest run_id dynamically
@@ -259,11 +268,17 @@ def generate_graph_data(run_id: str = None) -> dict:
 
     losses_data = get_global_model_losses_influx_data(run_id)
     influx_data = get_miner_and_validator_influx_data(run_id, epoch = max(losses_data['outer_steps']) if losses_data['outer_steps'] != [] else 0)
+    active_miners_count = get_active_miners() 
+
+    print("ACTIVE MINERS")
+    print(active_miners_count)
+        
 
     output = {
         "run_id": run_id,
         **influx_data,
-        "loss_graph": losses_data
+        "loss_graph": losses_data,
+        "active_miners": active_miners_count
     }
 
     json_path = "processed/graphs_data.json"

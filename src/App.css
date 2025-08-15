@@ -173,3 +173,24 @@ p {
   transform: none;
   cursor: default;
 }
+
+.investor-dashboard-container {
+  padding: 1rem;
+}
+
+.info-boxes-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.info-box {
+  flex: 1;
+  background-color: #000000;
+  padding: 1rem;
+  margin: 0 0.5rem;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+}
