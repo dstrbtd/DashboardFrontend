@@ -272,13 +272,13 @@ def generate_graph_data(run_id: str = None) -> dict:
 
     print("ACTIVE MINERS")
     print(active_miners_count)
-        
 
     output = {
         "run_id": run_id,
         **influx_data,
         "loss_graph": losses_data,
-        "active_miners": active_miners_count
+        "active_miners": active_miners_count,
+        "model_size": "1.1B"
     }
 
     json_path = "processed/graphs_data.json"

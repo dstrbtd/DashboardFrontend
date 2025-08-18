@@ -25,10 +25,7 @@ def get_latest_uid_tracker():
     |> limit(n: 1)
     |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")'''
     tables = query_api.query_data_frame(query)
-    
-    if tables.empty:
-        return pd.DataFrame()
-    
+    tables = pd.concat(tables) if isinstance(tables, list) else tables
     last_updated_time = pd.Timestamp(tables["_time"].iloc[0]).tz_convert("Africa/Cairo")
     
     # Drop metadata columns
