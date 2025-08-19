@@ -57,6 +57,13 @@ p {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   white-space: nowrap;
 }
+@media (max-width: 768px) {
+  .heading-3 {
+    white-space: normal;   /* allow wrapping */
+    word-break: break-word; /* wrap long words if needed */
+    text-align: center;    /* or left, depending on your design */
+  }
+}
 
 .text-ibm {
   color: #ffffff;
@@ -172,10 +179,6 @@ p {
   color: #555;
   transform: none;
   cursor: default;
-}
-
-.investor-dashboard-container {
-  padding: 1rem;
 }
 
 .info-boxes-row {

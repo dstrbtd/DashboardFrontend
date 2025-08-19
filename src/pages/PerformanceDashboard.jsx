@@ -8,8 +8,9 @@ import '../styles/InvestorDashboard.css';
 
 const InvestorDashboard = () => {
   const [runId, setRunId] = useState('N/A');
-  const [modelSize, setModelSize] = useState('1.3B'); // placeholder
+  const [modelSize, setModelSize] = useState('1.1B'); // placeholder
   const [activeMiners, setActiveMiners] = useState('N/A');
+  const [modelanme, setModelName] = useState("distributed/llama-1b");
 
   useEffect(() => {
     // Connect to WebSocket server to get run_id
@@ -62,6 +63,24 @@ const InvestorDashboard = () => {
         <div className="info-box">
           <div className="info-label">Active Miners</div>
           <div className="info-value">{activeMiners}</div>
+        </div>
+        <div className="info-box">
+          <div className="info-label">Model</div>
+          <div className="info-value">
+            <a
+              href="https://huggingface.co/distributed/llama-1b/tree/main"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "white",
+                textDecoration: "underline",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              {modelanme}
+            </a>
+          </div>
         </div>
       </div>
 

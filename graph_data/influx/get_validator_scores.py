@@ -137,9 +137,9 @@ app.layout = html.Div([
     html.Div([
         html.Div("Select UIDs:", 
                  style={
-                     "color": "white", 
-                     "width": "10%", 
-                    #  "margin-right": "10px"
+                    "color": "white",
+                    "marginRight": "10px",   # remove fixed width, just margin
+                    "whiteSpace": "nowrap"   # prevent wrapping
                 }),
         dcc.Dropdown(
             id="uid-filter",
@@ -147,9 +147,9 @@ app.layout = html.Div([
             multi=True,
             placeholder="Choose UIDs...",
             className="dark-dropdown",
-            style={"width": "100%"}
+            style={"flex": "1"}
         )
-    ], style={"display": "flex", "alignItems": "center", "marginBottom": "20px"}),
+    ], style={"display": "flex", "alignItems": "center", "marginBottom": "20px", "flexWrap": "wrap","gap": "10px"}),   # add spacing between label and dropdow
 
     dag.AgGrid(
         id="metrics-grid",
