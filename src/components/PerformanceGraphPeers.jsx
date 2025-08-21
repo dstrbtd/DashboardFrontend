@@ -145,7 +145,7 @@ export default function InvestorGraphPeers() {
     scales: {
       x: {
         title: { display: true, text: 'Outer Step', color: '#eee' },
-        ticks: { color: '#eee' },
+        ticks: { color: '#eee', autoSkip: true, maxTicksLimit: 14 },
         grid: {
           color: 'transparent',
           borderColor: 'transparent',

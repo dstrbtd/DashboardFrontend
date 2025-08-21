@@ -7,9 +7,9 @@ import websocketConfig from '../config/websocketUrls';
 import '../styles/InvestorDashboard.css';
 
 const InvestorDashboard = () => {
-  const [runId, setRunId] = useState('N/A');
+  const [runId, setRunId] = useState('7');
   const [modelSize, setModelSize] = useState('1.1B'); // placeholder
-  const [activeMiners, setActiveMiners] = useState('N/A');
+  const [activeMiners, setActiveMiners] = useState('200');
   const [modelanme, setModelName] = useState("distributed/llama-1b");
 
   useEffect(() => {
