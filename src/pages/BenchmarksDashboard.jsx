@@ -22,7 +22,7 @@ const BenchmarksDashboard = () => {
       </h1>
 
       <iframe
-        src="https://370b53258dd5.ngrok-free.app"
+        src="https://ngrok.dstrbtd.ai"
         title="Validator Dashboard"
         style={{
           border: 'none',
