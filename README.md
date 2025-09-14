@@ -53,7 +53,7 @@ npm install
 4. **Run the WebSocket server**
 ```bash
 tmux new -s ws_server
-python graph_data/influx/websocket_server.py
+python data/websocket_server.py
 # Press Ctrl+b, then d to detach
 ```
 
