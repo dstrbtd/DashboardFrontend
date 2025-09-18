@@ -7,7 +7,7 @@ const Sidebar = () => {
   const navItems = [
     { to: '/performance', icon: FaChartLine, label: 'Performance', disabled: false },
     { to: '/benchmarks', icon: FaTrophy, label: 'Benchmarks', disabled: false },
-    { to: '/miner', icon: FaHammer, label: 'Miner', disabled: true },
+    { to: '/miner', icon: FaHammer, label: 'Miner', disabled: false },
   ];
 
   return (
