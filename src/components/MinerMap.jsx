@@ -19,8 +19,8 @@ const MinerGlobe = () => {
   return (
     <div style={{ width: '100%', height: '600px' }}>
       <Globe
-        ref={globeRef}
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+        ref={globeRef}// earth-water.png
+        globeImageUrl="//unpkg.com/three-globe/example/img/earth-water.png"
         
         // instead of pointsData → use htmlElementsData
         htmlElementsData={miners}
@@ -47,6 +47,7 @@ const MinerGlobe = () => {
             </div>`;
           return el;
         }}
+        backgroundColor="black"
       />
     </div>
   );
