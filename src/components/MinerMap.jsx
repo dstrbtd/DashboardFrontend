@@ -31,32 +31,12 @@ const MinerGlobe = () => {
       <Globe
         ref={globeRef}
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-water.png"
-        htmlElementsData={miners}
-        htmlLat={(d) => d.coordinates[0]}
-        htmlLng={(d) => d.coordinates[1]}
-        htmlAltitude={0.05}
-        htmlElement={(d) => {
-          const el = document.createElement('div');
-          el.innerHTML = `<div 
-            title="${d.name}" 
-            style="
-              width: 28px;
-              height: 28px;
-              border-radius: 50%;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 12px;
-              font-weight: bold;
-              color: black;
-              border: 2px solid #333;
-              cursor: pointer;
-            ">
-            ${d.name[0]}
-          </div>`;
-          return el;
-        }}
+        pointsData={miners}
+        pointLat={(d) => d.coordinates[0]}
+        pointLng={(d) => d.coordinates[1]}
+        pointColor={() => "white"}
+        pointAltitude={0.12}
+        pointLabel={(d) => d.name}
         backgroundColor="black"
       />
     </div>
