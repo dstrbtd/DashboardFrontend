@@ -19,9 +19,12 @@ const MinerDashboard = () => {
       <p className="text-ibm">Coming soon...</p>
 
       <h1 id="v3" className="heading-3">V3 Map</h1>
-      <div className="graph-wrapper">
+      <div>
         <MinerMap />
       </div>
+      {/* <div className="graph-wrapper">
+        <MinerMap />
+      </div> */}
       <p className="text-ibm">Coming soon...</p>
     </div>
   );
