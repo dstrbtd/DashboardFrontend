@@ -26,8 +26,8 @@ def get_active_miners() -> int:
 # -----------------------------------------
 def get_latest_run_id_from_validator_metrics(days: int = 7) -> str:
     """
-    Query recent validator allreduce_operations to find the highest run_id
-    seen in the last `days` days, returned as string.
+    Fetch the most recent run_id from validator allreduce_operations
+    over the past `days` days.
     """
     client = InfluxDBClient(
         url="http://161.97.156.125:8086",
@@ -45,20 +45,18 @@ def get_latest_run_id_from_validator_metrics(days: int = 7) -> str:
       |> keep(columns: ["run_id"])
       |> group()
       |> distinct(column: "run_id")
-      |> sort(columns: ["run_id"], desc: true)
-      |> limit(n:1)
+      |> sort(columns: ["run_id"], desc: false)
     '''
 
     results = query_api.query(org="distributed-training", query=flux)
 
-    for table in results:
-        for record in table.records:
-            max_run_id = record.values.get("_value")
-            if max_run_id is not None:
-                return str(max_run_id)
+    run_ids = [record.values.get("_value") for table in results for record in table.records]
 
-    # fallback default run_id
-    return "6"
+    if not run_ids:
+        raise ValueError(f"No run_ids found in the past {days} days.")
+
+    latest_run_id = max(run_ids, key=lambda x: int(x))
+    return latest_run_id
 
 
 # -----------------------------------------
@@ -264,7 +262,7 @@ def generate_graph_data(run_id: str = None) -> dict:
     """
     if run_id is None:
         run_id = get_latest_run_id_from_validator_metrics(days=7)
-        print(f"No run_id provided, using latest run_id from validator metrics: {run_id}")
+        print(f"Using latest run_id from validator metrics: {run_id}")
     else:
         print(f"Using provided run_id: {run_id}")
 
