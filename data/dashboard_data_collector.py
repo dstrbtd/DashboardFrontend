@@ -55,6 +55,40 @@ def get_latest_run_id_validator_influx(days: int = 7) -> str:
     latest_run_id = max(run_ids, key=lambda x: int(x))
     return latest_run_id
 
+def get_latest_epoch_validator_influx(run_id: str) -> int:
+    """
+    Fetch the latest epoch value for the given run_id.
+    """
+    client = InfluxDBClient(
+        url="http://161.97.156.125:8086",
+        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
+        org="distributed-training",
+        timeout=60_000
+    )
+    query_api = client.query_api()
+
+    flux = f'''
+    from(bucket: "distributed-training-metrics")
+      |> range(start: -30d)
+      |> filter(fn: (r) => r._measurement == "allreduce_operations")
+      |> filter(fn: (r) => r.run_id == "{run_id}")
+      |> filter(fn: (r) => exists r.epoch)
+      |> keep(columns: ["epoch"])
+      |> group()
+      |> distinct(column: "epoch")
+      |> sort(columns: ["epoch"], desc: true)
+      |> limit(n:1)
+    '''
+
+    results = query_api.query(org="distributed-training", query=flux)
+
+    epochs = [record.values.get("_value") for table in results for record in table.records]
+
+    if not epochs:
+        raise ValueError(f"No epochs found for run_id {run_id}")
+
+    return int(epochs[0])
+
 def get_global_model_loss_influx(run_id: str) -> dict:
     """
     Retrieve outer_steps vs. losses for fineweb task for given run_id.
@@ -221,18 +255,19 @@ def preview_dict(d: dict, max_items: int = 3) -> dict:
             preview[k] = v
     return preview
 
-def generate_dashboard_data(run_id: str = None, verbose: bool = True, save_json: bool = True) -> dict:
+def generate_dashboard_data(verbose: bool = True, save_json: bool = True) -> dict:
     """
     Combine miner/validator graph data with losses data into one dictionary.
     If run_id is None, fetch the latest run_id dynamically.
     Verbose controls printing. save_json controls saving to dashboard_data.json.
     """
-    if run_id is None:
-        run_id = get_latest_run_id_validator_influx(days=7)
+    
+    run_id = get_latest_run_id_validator_influx(days=7)
     if verbose: print(f"run_id: {run_id}")
+    latest_epoch = get_latest_epoch_validator_influx(run_id)
+    if verbose: print(f"latest_epoch: {latest_epoch}")
 
     global_loss_data = get_global_model_loss_influx(run_id)
-    latest_epoch = max(global_loss_data['outer_steps']) if global_loss_data['outer_steps'] else 0
     if verbose:
         print(f"epoch: {latest_epoch}")
         print(f"global_loss_data preview: {preview_dict(global_loss_data)}")
