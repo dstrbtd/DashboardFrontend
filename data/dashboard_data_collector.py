@@ -11,6 +11,16 @@ import bittensor as bt
 
 warnings.simplefilter("ignore", MissingPivotFunction)
 
+
+def initialize_influx_client() -> InfluxDBClient:
+    client = InfluxDBClient(
+        url="http://161.97.156.125:8086",
+        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
+        org="distributed-training",
+        timeout=260_000
+    )
+    return client
+
 counter = 0
 
 def get_active_miners_bt_metagraph() -> int:
@@ -26,12 +36,7 @@ def get_latest_run_id_validator_influx(days: int = 7) -> str:
     Fetch the most recent run_id from validator allreduce_operations
     over the past `days` days.
     """
-    client = InfluxDBClient(
-        url="http://161.97.156.125:8086",
-        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
-        org="distributed-training",
-        timeout=60_000
-    )
+    client = initialize_influx_client()
     query_api = client.query_api()
 
     flux = f'''
@@ -59,12 +64,7 @@ def get_latest_epoch_validator_influx(run_id: str) -> int:
     """
     Fetch the latest epoch value for the given run_id.
     """
-    client = InfluxDBClient(
-        url="http://161.97.156.125:8086",
-        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
-        org="distributed-training",
-        timeout=60_000
-    )
+    client = initialize_influx_client()
     query_api = client.query_api()
 
     flux = f'''
@@ -94,11 +94,7 @@ def get_global_model_loss_influx(run_id: str) -> dict:
     Retrieve outer_steps vs. losses for fineweb task for given run_id.
     Matches exact run_id.0.0 and run_id.x tags.
     """
-    client = InfluxDBClient(
-        url="http://161.97.156.125:8086",
-        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
-        org="distributed-training"
-    )
+    client = initialize_influx_client()
     query_api = client.query_api()
 
     query = f"""
@@ -151,12 +147,7 @@ def get_global_model_loss_influx(run_id: str) -> dict:
     }
 
 def get_miner_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> dict:
-    client = InfluxDBClient(
-        url="http://161.97.156.125:8086",
-        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
-        org="distributed-training",
-        timeout=260_000
-    )
+    client = initialize_influx_client()
     query_api = client.query_api()
 
     flux = f'''
@@ -188,12 +179,7 @@ def get_miner_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> 
     return miners_dict
 
 def get_validator_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> dict:
-    client = InfluxDBClient(
-        url="http://161.97.156.125:8086",
-        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
-        org="distributed-training",
-        timeout=260_000
-    )
+    client = initialize_influx_client()
     query_api = client.query_api()
 
     flux = f'''
@@ -255,7 +241,7 @@ def preview_dict(d: dict, max_items: int = 3) -> dict:
             preview[k] = v
     return preview
 
-def generate_dashboard_data(verbose: bool = True, save_json: bool = True) -> dict:
+def generate_dashboard_data(save_json: bool = True) -> dict:
     """
     Combine miner/validator graph data with losses data into one dictionary.
     If run_id is None, fetch the latest run_id dynamically.
@@ -263,25 +249,21 @@ def generate_dashboard_data(verbose: bool = True, save_json: bool = True) -> dic
     """
     
     run_id = get_latest_run_id_validator_influx(days=7)
-    if verbose: print(f"run_id: {run_id}")
+    print(f"run_id: {run_id}")
     latest_epoch = get_latest_epoch_validator_influx(run_id)
-    if verbose: print(f"latest_epoch: {latest_epoch}")
+    print(f"latest_epoch: {latest_epoch}")
 
     global_loss_data = get_global_model_loss_influx(run_id)
-    if verbose:
-        print(f"epoch: {latest_epoch}")
-        print(f"global_loss_data preview: {preview_dict(global_loss_data)}")
+    print(f"global_loss_data preview: {preview_dict(global_loss_data)}")
 
     active_miners_count = get_active_miners_bt_metagraph()
-    if verbose: print(f"Active miners count: {active_miners_count}")    
+    print(f"Active miners count: {active_miners_count}")
 
     validator_data = get_validator_influx_data(run_id, epoch=latest_epoch)
-    if verbose:
-        print(f"validator_data preview: {preview_dict(validator_data)}")        
+    print(f"validator_data preview: {preview_dict(validator_data)}")
 
     miner_data = get_miner_influx_data(run_id, epoch=latest_epoch)
-    if verbose:
-        print(f"miner_data preview: {preview_dict(miner_data)}")
+    print(f"miner_data preview: {preview_dict(miner_data)}")
 
     dashboard_dict = {
         "run_id": run_id,
@@ -296,9 +278,9 @@ def generate_dashboard_data(verbose: bool = True, save_json: bool = True) -> dic
         filename = "dashboard_data.json"
         with open(filename, "w") as f:
             json.dump(dashboard_dict, f, indent=2)
-        if verbose: print(f"✅ {filename} saved and dashboard_dict created")
+        print(f"✅ {filename} saved and dashboard_dict created")
     else:
-        if verbose: print(f"✅ dashboard_dict created")
+        print(f"✅ dashboard_dict created")
 
     return dashboard_dict
 

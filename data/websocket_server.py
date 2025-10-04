@@ -24,7 +24,6 @@ async def notify_clients():
         try:
             data = await asyncio.to_thread(
                 generate_dashboard_data,
-                verbose=True,
                 save_json=True
             )
 
