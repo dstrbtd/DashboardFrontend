@@ -30,4 +30,6 @@ data/dashboard_data.json
 instructions.txt
 **/__pycache__/
 
+.env
+
 

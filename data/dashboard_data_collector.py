@@ -8,14 +8,23 @@ from influxdb_client.client.warnings import MissingPivotFunction
 from datetime import datetime, timezone
 import time
 import bittensor as bt
+from dotenv import load_dotenv
+
 
 warnings.simplefilter("ignore", MissingPivotFunction)
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ENV_PATH = os.path.join(PROJECT_ROOT, ".env")
+
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
+else:
+    raise FileNotFoundError(f"Warning: .env file not found at expected location: {ENV_PATH}")
 
 def initialize_influx_client() -> InfluxDBClient:
     client = InfluxDBClient(
         url="http://161.97.156.125:8086",
-        token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
+        token=os.getenv("INFLUXDB_TOKEN"),
         org="distributed-training",
         timeout=260_000
     )
