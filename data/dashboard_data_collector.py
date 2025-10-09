@@ -33,7 +33,7 @@ def initialize_influx_client() -> InfluxDBClient:
 counter = 0
 
 def get_active_miners_bt_metagraph() -> int:
-    metagraph = bt.metagraph(netuid=38, network="ws://198.244.212.206:9944")
+    metagraph = bt.metagraph(netuid=38)
     active_miners = len([
         x for x in range(metagraph.n)
         if metagraph.axons[x].ip != "0.0.0.0" and metagraph.stake[x] <= 1000
