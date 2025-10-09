@@ -56,10 +56,10 @@ const MinerGlobeHollow = () => {
         pointsData={miners}
         pointLat={d => d.coordinates[0]}
         pointLng={d => d.coordinates[1]}
-        pointColor={() => '#529aff'} //red
-        pointAltitude={0.12}
+        pointColor={() => 'red'} //#529aff
+        pointAltitude={0.22}
         pointRadius={0.52}
-        pointLabel={d => d.name}
+        pointLabel={d => `<div style="font-size:16px;font-weight:bold;color:white;">${d.name}</div>`}
       />
     </div>
   );
