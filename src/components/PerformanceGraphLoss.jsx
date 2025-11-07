@@ -37,7 +37,7 @@ export default function InvestorGraphLoss() {
         const data = JSON.parse(event.data);
         setRunId(data.run_id || null);
 
-        const lossGraph = data.loss_graph || {};
+        const lossGraph = data.global_loss_data || {};
         const outerSteps = lossGraph.outer_steps || [];
         const losses = lossGraph.losses || [];
 

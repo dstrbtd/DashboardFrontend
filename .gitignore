@@ -26,6 +26,10 @@ dist-ssr
 __pycache__/
 *.pyc
 
-graph_data/influx/processed/graphs_data.json
+data/dashboard_data.json
 instructions.txt
+**/__pycache__/
+
+.env
+
 
