@@ -40,15 +40,15 @@ def get_active_miners_bt_metagraph() -> int:
     ])
     return active_miners
 
-def get_latest_run_id_validator_influx(days: int = 7) -> str:
+def get_latest_run_and_epoch_validator_influx(days: int = 7) -> tuple[str, int]:
     """
-    Fetch the most recent run_id from validator allreduce_operations
-    over the past `days` days.
+    Return (latest_run_id, latest_epoch_for_that_run).
+    Logic stays clear and debuggable.
     """
     client = initialize_influx_client()
     query_api = client.query_api()
 
-    flux = f'''
+    flux_run_ids = f'''
     from(bucket: "distributed-training-metrics")
       |> range(start: -{days}d)
       |> filter(fn: (r) => r._measurement == "allreduce_operations")
@@ -56,49 +56,37 @@ def get_latest_run_id_validator_influx(days: int = 7) -> str:
       |> keep(columns: ["run_id"])
       |> group()
       |> distinct(column: "run_id")
-      |> sort(columns: ["run_id"], desc: false)
     '''
 
-    results = query_api.query(org="distributed-training", query=flux)
-
-    run_ids = [record.values.get("_value") for table in results for record in table.records]
+    result_run = query_api.query(org="distributed-training", query=flux_run_ids)
+    run_ids = [r.values["_value"] for t in result_run for r in t.records]
 
     if not run_ids:
         raise ValueError(f"No run_ids found in the past {days} days.")
 
     latest_run_id = max(run_ids, key=lambda x: int(x))
-    return latest_run_id
 
-def get_latest_epoch_validator_influx(run_id: str) -> list[int]:
-    client = initialize_influx_client()
-    query_api = client.query_api()
-
-    flux = f'''
+    flux_epochs = f'''
     from(bucket: "distributed-training-metrics")
       |> range(start: -30d)
       |> filter(fn: (r) => r._measurement == "allreduce_operations")
-      |> filter(fn: (r) => r.run_id == "{run_id}")
+      |> filter(fn: (r) => r.run_id == "{latest_run_id}")
       |> filter(fn: (r) => exists r.epoch)
       |> keep(columns: ["epoch"])
       |> group()
       |> distinct(column: "epoch")
     '''
 
-    results = query_api.query(org="distributed-training", query=flux)
+    result_epochs = query_api.query(org="distributed-training", query=flux_epochs)
+    epochs = [int(r.values["_value"]) for t in result_epochs for r in t.records]
 
-    epochs = [
-        int(record.values.get("_value"))
-        for table in results
-        for record in table.records
-    ]
+    if not epochs:
+        raise ValueError(f"No epochs found for run_id {latest_run_id}")
 
-    epochs.sort()
+    latest_epoch = max(epochs)
 
-    # print("epochs:", epochs) # use for debugging
+    return latest_run_id, latest_epoch
 
-    latest_epoch = epochs[-1] if epochs else None
-
-    return latest_epoch
 
 def get_global_model_loss_influx(run_id: str) -> dict:
     """
@@ -258,10 +246,10 @@ def generate_dashboard_data(save_json: bool = True) -> dict:
     If run_id is None, fetch the latest run_id dynamically.
     Verbose controls printing. save_json controls saving to dashboard_data.json.
     """
-    
-    run_id = get_latest_run_id_validator_influx(days=7)
+
+    run_id, latest_epoch = get_latest_run_and_epoch_validator_influx()
+
     print(f"run_id: {run_id}")
-    latest_epoch = get_latest_epoch_validator_influx(run_id)
     print(f"latest_epoch: {latest_epoch}")
 
     global_loss_data = get_global_model_loss_influx(run_id)
