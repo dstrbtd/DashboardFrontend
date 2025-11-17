@@ -253,6 +253,18 @@ def generate_dashboard_data(save_json: bool = True) -> dict:
     print(f"latest_epoch: {latest_epoch}")
 
     global_loss_data = get_global_model_loss_influx(run_id)
+
+    if global_loss_data.get("outer_steps") and latest_epoch is not None:
+        steps = global_loss_data["outer_steps"]
+        losses = global_loss_data["losses"]
+
+        if steps:
+            max_existing = max(steps)
+            if max_existing < latest_epoch:
+                pad_steps = list(range(max_existing + 1, latest_epoch + 1))
+                steps.extend(pad_steps)
+                losses.extend([None] * len(pad_steps))
+
     print(f"global_loss_data preview: {preview_dict(global_loss_data)}")
 
     active_miners_count = get_active_miners_bt_metagraph()
