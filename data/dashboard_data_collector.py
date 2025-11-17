@@ -69,10 +69,7 @@ def get_latest_run_id_validator_influx(days: int = 7) -> str:
     latest_run_id = max(run_ids, key=lambda x: int(x))
     return latest_run_id
 
-def get_latest_epoch_validator_influx(run_id: str) -> int:
-    """
-    Fetch the latest epoch value for the given run_id.
-    """
+def get_latest_epoch_validator_influx(run_id: str) -> list[int]:
     client = initialize_influx_client()
     query_api = client.query_api()
 
@@ -85,18 +82,23 @@ def get_latest_epoch_validator_influx(run_id: str) -> int:
       |> keep(columns: ["epoch"])
       |> group()
       |> distinct(column: "epoch")
-      |> sort(columns: ["epoch"], desc: true)
-      |> limit(n:1)
     '''
 
     results = query_api.query(org="distributed-training", query=flux)
 
-    epochs = [record.values.get("_value") for table in results for record in table.records]
+    epochs = [
+        int(record.values.get("_value"))
+        for table in results
+        for record in table.records
+    ]
 
-    if not epochs:
-        raise ValueError(f"No epochs found for run_id {run_id}")
+    epochs.sort()
 
-    return int(epochs[0])
+    # print("epochs:", epochs) # use for debugging
+
+    latest_epoch = epochs[-1] if epochs else None
+
+    return latest_epoch
 
 def get_global_model_loss_influx(run_id: str) -> dict:
     """
