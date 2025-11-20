@@ -6,7 +6,8 @@ import '../App.css';
 const Sidebar = () => {
   const navItems = [
     { to: '/performance', icon: FaChartLine, label: 'Performance', disabled: false },
-    { to: '/benchmarks', icon: FaTrophy, label: 'Benchmarks', disabled: false },
+    { to: '/benchmarks_mech0', icon: FaTrophy, label: 'Benchmarks M0', disabled: false },
+    { to: '/benchmarks_mech1', icon: FaTrophy, label: 'Benchmarks M1', disabled: false },
     { to: '/miner', icon: FaHammer, label: 'Miner', disabled: true },
   ];
 
@@ -33,11 +34,16 @@ const Sidebar = () => {
       </div>
 
       <div className="nav-icons-container">
-        {navItems.map(({ to, icon: Icon, label, disabled }) => (
-          <div className="tooltip" key={to}>
+        {navItems.map(({ to, icon: Icon, label, disabled }, index) => (
+          <div className="tooltip" key={to} style={{ position: 'relative' }}>
             {disabled ? (
-              <div className="nav-icon disabled" style={{ cursor: 'default' }}>
+              <div className="nav-icon disabled" style={{ cursor: 'default', position: 'relative' }}>
                 <Icon size={32} />
+                {(to === '/benchmarks_mech0' || to === '/benchmarks_mech1') && (
+                  <span className="icon-number">
+                    {to === '/benchmarks_mech0' ? 0 : 1}
+                  </span>
+                )}
               </div>
             ) : (
               <NavLink
@@ -45,14 +51,22 @@ const Sidebar = () => {
                 className={({ isActive }) =>
                   isActive ? 'nav-icon active' : 'nav-icon'
                 }
+                style={{ position: 'relative' }}
               >
                 <Icon size={32} />
+                {(to === '/benchmarks_mech0' || to === '/benchmarks_mech1') && (
+                  <span className="icon-number">
+                    {to === '/benchmarks_mech0' ? 0 : 1}
+                  </span>
+                )}
               </NavLink>
             )}
             <span className="tooltip-text">{disabled ? 'Coming soon' : label}</span>
           </div>
         ))}
       </div>
+
+
     </nav>
   );
 };
