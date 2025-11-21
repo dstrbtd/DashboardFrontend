@@ -6,7 +6,7 @@ const WS_ENV = {
   NGROK: 'wss://websocket.dstrbtd.ai',
 };
 
-const CURRENT_WS_URL = WS_ENV.LOCAL;
+const CURRENT_WS_URL = WS_ENV.NGROK;
 
 export default {
   WS_URL: CURRENT_WS_URL,
