@@ -54,7 +54,7 @@ def load_mechanism1_metrics(current_block = None):
         df = pd.concat(df)
     if df.empty:
         return pd.DataFrame(), {}
-    # breakpoint()
+
     df["current_block"] = df["current_block"].fillna(0).astype(int)
     latest_current_block = df["current_block"].max()
     if current_block is None:
@@ -193,6 +193,7 @@ app.layout = html.Div([
     Output("subnet1-grid", "columnDefs"),
     Output("last-updated", "children"),
     Output("current_block_dropdown", "value"),
+    Output("current_block_dropdown", "options"),
     Input("refresh", "n_intervals"),
     Input("current_block_dropdown", "value"),
 )
@@ -202,6 +203,15 @@ def reload_data(_, selected_block):
         df, filtered_df, meta, current_block = load_mechanism1_metrics(selected_block)
         if not df.empty:
             cached_df, filtered_cached_df, cached_meta, cached_current_block = df, filtered_df, meta, current_block
+        all_blocks = [{"label": str(b), "value": b} for b in sorted(cached_df["current_block"].unique(), reverse=True)]
+
+        # If user cleared the selection or it's missing → auto-select the latest
+        if selected_block is None:
+            selected_block = cached_current_block
+        elif selected_block not in all_blocks:
+            selected_block = cached_current_block
+
+        _, filtered_cached_df, cached_meta, _ = load_mechanism1_metrics(selected_block)
 
         # Build pretty metadata boxes
         meta_boxes = [
@@ -252,9 +262,9 @@ def reload_data(_, selected_block):
             else:
                 coldefs.append({"field": c, "sortable": True, "filter": True, "resizable": True})
 
-        return meta_boxes, filtered_cached_df.to_dict("records"), coldefs, f"Last updated: {pd.Timestamp.utcnow()}", cached_current_block
+        return meta_boxes, filtered_cached_df.to_dict("records"), coldefs, f"Last updated: {pd.Timestamp.utcnow()}", cached_current_block, all_blocks
     except Exception as e:
-        return [], [],  [], f"Error loading data: {e}", 0
+        return [], [],  [], f"Error loading data: {e}", 0, []
 
 
 if __name__ == "__main__":

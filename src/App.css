@@ -197,3 +197,14 @@ p {
   font-weight: bold;
   font-size: 1rem;
 }
+
+.icon-number {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: black;
+  font-size: 10px;
+  font-weight: bold;
+  pointer-events: none;
+}
