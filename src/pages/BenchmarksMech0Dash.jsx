@@ -18,14 +18,11 @@ const BenchmarksDashboard = () => {
           marginBottom: '1rem',
           width: '100%',
         }}>
-        {/* Miner Scores */}
-        {/* Mechanism 0 Metrics Dashboard */}
-        {/* Mechanism 0 Miner Scores */}
-        Mechanism 0 Scores
+        Mechanism 0 Miner Scores
       </h1>
 
       <iframe
-        src="https://ngrok.dstrbtd.ai"
+        src="https://ngrok-dash0.dstrbtd.ai"
         title="Validator Dashboard Mech 0"
         style={{
           border: 'none',
