@@ -41,8 +41,8 @@ def get_latest_uid_tracker():
     |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")'''
     tables = query_api.query_data_frame(query)
     tables = pd.concat(tables) if isinstance(tables, list) else tables
-    last_updated_time = pd.Timestamp(tables["_time"].iloc[0]).tz_convert("Africa/Cairo")
-    
+    last_updated_time = pd.Timestamp(tables["_time"].iloc[0])
+
     # Drop metadata columns
     tables = tables.drop(columns=["result", "table", "_start", "_stop", "_time", "uid"])
     tables = tables.rename(columns={"miner_uid": "uid"})
@@ -71,7 +71,11 @@ def get_latest_timestamp():
     if df.empty:
         return None
     # df["_time"] will be timezone-aware
-    return pd.to_datetime(df["_time"].iloc[0])
+
+    ts = pd.to_datetime(df["_time"].iloc[0])
+
+    # Ensure SAME timezone as get_latest_uid_tracker()
+    return ts
 
 # Global cache
 cached_df, cached_last_updated_time = get_latest_uid_tracker()
@@ -188,7 +192,7 @@ app.layout = html.Div([
         style={"height": "90%", "width": "100%", "marginBottom": "20px"},
         className="ag-theme-alpine-dark"
     ),
-    html.Div(f"Last updated: {cached_last_updated_time.strftime('%Y-%m-%d %H:%M:%S %Z%z')}", id="last-updated", className="last-updated"),
+    html.Div(f"Last updated: {cached_last_updated_time.tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}", id="last-updated", className="last-updated"),
     
     dcc.Interval(id="interval", interval=10 * 1000, n_intervals=0),
 ], className="app-container")
@@ -211,7 +215,7 @@ def filter_and_reload_data(selected_uids, n_intervals):
         latest_time = get_latest_timestamp()
 
         # Only reload from InfluxDB if the timestamp changed
-        if (cached_df.empty) or (latest_time != cached_last_updated_time):
+        if (cached_df.empty) or (latest_time is None) or (latest_time != cached_last_updated_time):
             df, last_updated_time = get_latest_uid_tracker()
             df = df.reset_index(drop=True)
             cached_df = df
@@ -226,7 +230,7 @@ def filter_and_reload_data(selected_uids, n_intervals):
         if selected_uids:
             df = df[df["uid"].isin(selected_uids)]
 
-        return df.to_dict("records"), f"Last updated: {cached_last_updated_time.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
+        return df.to_dict("records"), f"Last updated: {cached_last_updated_time.tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
 
     except Exception as e:
         print("Reload error:", e)
@@ -234,4 +238,3 @@ def filter_and_reload_data(selected_uids, n_intervals):
 
 if __name__ == "__main__":
     app.run(debug=False, port=22177)
-    
