@@ -261,7 +261,7 @@ def generate_dashboard_data(save_json: bool = True) -> dict:
         if steps:
             max_existing = max(steps)
             if max_existing < latest_epoch:
-                pad_steps = list(range(max_existing + 1, latest_epoch + 1))
+                pad_steps = list(range(max_existing + 2, latest_epoch + 2))
                 steps.extend(pad_steps)
                 losses.extend([None] * len(pad_steps))
 
