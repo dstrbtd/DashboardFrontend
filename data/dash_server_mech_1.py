@@ -133,38 +133,43 @@ app.layout = html.Div([
         id="meta-boxes",
         className="info-boxes-row",
         style={
-            "marginBottom": "2.5rem"
+            "marginBottom": "2.5rem",
+            "width": "100%"
         }
     ),
 
     html.Div([
-        html.Label("Select Block:",
-                 style={
-                    "color": "rgba(255, 255, 255, 0.8)",
-                    "fontSize": "14px",
-                    "fontWeight": "500",
-                    "marginRight": "12px",
-                    "whiteSpace": "nowrap",
-                    "display": "flex",
-                    "alignItems": "center"
-                }),
-        dcc.Dropdown(
-            id="current_block_dropdown",
-            options=[{"label": str(b), "value": b} for b in sorted(cached_df["current_block"].unique(), reverse=True)],
-            multi=False,
-            value=cached_current_block,
-            className="dark-dropdown",
-            style={"width": "250px", "flexShrink": 0}
-        )
-    ], style={
-        "display": "flex", 
-        "justifyContent": "center",
-        "alignItems": "center", 
-        "marginBottom": "20px",
-        "padding": "12px 16px",
-        "backgroundColor": "rgba(20, 20, 20, 0.5)",
-        "borderRadius": "8px",
-        "border": "1px solid rgba(255, 255, 255, 0.08)"
+        html.Div([
+            html.Label("Select Block:",
+                     style={
+                        "color": "rgba(255, 255, 255, 0.8)",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "marginRight": "12px",
+                        "whiteSpace": "nowrap"
+                    }),
+            dcc.Dropdown(
+                id="current_block_dropdown",
+                options=[{"label": str(b), "value": b} for b in sorted(cached_df["current_block"].unique(), reverse=True)],
+                multi=False,
+                value=cached_current_block,
+                className="dark-dropdown",
+                style={"width": "250px", "flexShrink": 0, "maxWidth": "100%"}
+            )
+        ], style={
+            "display": "flex", 
+            "justifyContent": "center",
+            "alignItems": "center", 
+            "padding": "12px 16px",
+            "backgroundColor": "rgba(20, 20, 20, 0.5)",
+            "borderRadius": "8px",
+            "border": "1px solid rgba(255, 255, 255, 0.08)",
+            "width": "fit-content",
+            "minWidth": "fit-content",
+            "boxSizing": "border-box"
+        })
+    ], className="dropdown-wrapper", style={
+        "marginBottom": "20px"
     }),
 
     dag.AgGrid(
@@ -189,10 +194,16 @@ app.layout = html.Div([
         }
     ),
 
-    html.Div(id="last-updated", style={"color": "white", "marginTop": "10px"}),
+    html.Div([
+        html.Div(id="last-updated", className="last-updated")
+    ], style={
+        "display": "flex",
+        "justifyContent": "center",
+        "width": "100%"
+    }),
 
     dcc.Interval(id="refresh", interval=10 * 1000, n_intervals=0)
-], style={"backgroundColor": "black", "padding": "20px"})
+], className="app-container", style={"backgroundColor": "black", "padding": "20px"})
 
 
 # ------------------------------
@@ -259,7 +270,8 @@ def reload_data(_, selected_block):
             else:
                 coldefs.append({"field": c, "sortable": True, "filter": True, "resizable": True})
 
-        return meta_boxes, filtered_cached_df.to_dict("records"), coldefs, f"Last updated: {pd.Timestamp.utcnow()}", cached_current_block, all_blocks
+        last_updated_text = f"Last updated: {pd.Timestamp.utcnow().tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
+        return meta_boxes, filtered_cached_df.to_dict("records"), coldefs, last_updated_text, cached_current_block, all_blocks
     except Exception as e:
         return [], [],  [], f"Error loading data: {e}", 0, []
 

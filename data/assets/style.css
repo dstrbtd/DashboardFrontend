@@ -12,6 +12,66 @@ body {
     padding: 20px 10px 20px 10px;
     height: 100vh;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Override background for Mech 1 if needed */
+.app-container[style*="background-color: black"] {
+    background-color: black !important;
+}
+
+/* Ensure AG Grid takes full width */
+.app-container .ag-theme-alpine-dark {
+    width: 100% !important;
+}
+
+/* Ensure dropdown wrapper is centered - target specifically by class, not first-child */
+.app-container .dropdown-wrapper,
+div.dropdown-wrapper,
+.app-container > .dropdown-wrapper,
+html body .app-container .dropdown-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Hide dropdown wrapper when it has display: none in inline styles */
+.app-container .dropdown-wrapper[style*="display: none"],
+div.dropdown-wrapper[style*="display: none"] {
+    display: none !important;
+}
+
+/* Removed hiding rules - dropdown should now be visible on Mech 1 */
+
+/* For Mech 0, the dropdown-wrapper is the first child, so we can target it that way too */
+.app-container > div:first-child.dropdown-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Ensure the inner container (with fit-content) is also centered */
+.app-container .dropdown-wrapper > div {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Center last updated text */
+.app-container .last-updated {
+    text-align: center !important;
+    width: 100% !important;
 }
 
 .app-title {
@@ -105,7 +165,21 @@ body {
     color: white !important;
     min-height: 38px;
     transition: all 0.2s ease;
+    box-sizing: border-box !important;
+}
+
+/* Mech 0 dropdown - keep fixed width */
+#uid-filter .Select__control,
+#uid-filter .Select-control {
     width: 300px !important;
+    max-width: 300px !important;
+}
+
+/* Mech 1 dropdown - use container width */
+#current_block_dropdown .Select__control,
+#current_block_dropdown .Select-control {
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 .dark-dropdown .Select__control:hover,

@@ -82,7 +82,6 @@ def get_latest_timestamp():
 cached_df, cached_last_updated_time = get_latest_uid_tracker()
 print(cached_df[["total.score", "train.score", "train.is_valid", "all_reduce.score"]].head())
 print(cached_last_updated_time)
-breakpoint()
 import json
 data = []
 data.append({str(cached_last_updated_time) : cached_df[["uid", "total.score", "train.score", "train.is_valid", "all_reduce.score"]].sort_values("train.score", ascending = False).head(10).to_dict(orient = "records")})
@@ -152,31 +151,37 @@ column_defs = [
 
 app.layout = html.Div([ 
     html.Div([
-        html.Label("Select UIDs:", 
-                 style={
-                    "color": "rgba(255, 255, 255, 0.8)",
-                    "fontSize": "14px",
-                    "fontWeight": "500",
-                    "marginRight": "12px",
-                    "whiteSpace": "nowrap"
-                }),
-        dcc.Dropdown(
-            id="uid-filter",
-            options=[{"label": str(uid), "value": str(uid)} for uid in sorted([int(uid) for uid in cached_df.uid])],
-            multi=True,
-            placeholder="Choose UIDs...",
-            className="dark-dropdown",
-            style={"width": "300px", "flexShrink": 0}
-        )
-    ], style={
-        "display": "flex", 
-        "justifyContent": "center",
-        "alignItems": "center", 
-        "marginBottom": "20px",
-        "padding": "12px 16px",
-        "backgroundColor": "rgba(20, 20, 20, 0.5)",
-        "borderRadius": "8px",
-        "border": "1px solid rgba(255, 255, 255, 0.08)"
+        html.Div([
+            html.Label("Select UIDs:", 
+                     style={
+                        "color": "rgba(255, 255, 255, 0.8)",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "marginRight": "12px",
+                        "whiteSpace": "nowrap"
+                    }),
+            dcc.Dropdown(
+                id="uid-filter",
+                options=[{"label": str(uid), "value": str(uid)} for uid in sorted([int(uid) for uid in cached_df.uid])],
+                multi=True,
+                placeholder="Choose UIDs...",
+                className="dark-dropdown",
+                style={"width": "300px", "flexShrink": 0}
+            )
+        ], style={
+            "display": "flex", 
+            "justifyContent": "center",
+            "alignItems": "center", 
+            "padding": "12px 16px",
+            "backgroundColor": "rgba(20, 20, 20, 0.5)",
+            "borderRadius": "8px",
+            "border": "1px solid rgba(255, 255, 255, 0.08)",
+            "width": "fit-content",
+            "minWidth": "fit-content",
+            "boxSizing": "border-box"
+        })
+    ], className="dropdown-wrapper", style={
+        "marginBottom": "20px"
     }),
 
     dag.AgGrid(
@@ -202,7 +207,13 @@ app.layout = html.Div([
         style={"height": "90%", "width": "100%", "marginBottom": "20px"},
         className="ag-theme-alpine-dark"
     ),
-    html.Div(f"Last updated: {cached_last_updated_time.tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}", id="last-updated", className="last-updated"),
+    html.Div([
+        html.Div(f"Last updated: {cached_last_updated_time.tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}", id="last-updated", className="last-updated")
+    ], style={
+        "display": "flex",
+        "justifyContent": "center",
+        "width": "100%"
+    }),
     
     dcc.Interval(id="interval", interval=10 * 1000, n_intervals=0),
 ], className="app-container")
