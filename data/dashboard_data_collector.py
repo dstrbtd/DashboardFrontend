@@ -248,6 +248,8 @@ def generate_dashboard_data(save_json: bool = True) -> dict:
     """
 
     run_id, latest_epoch = get_latest_run_and_epoch_validator_influx()
+    # run_id = 1
+    # latest_epoch = 50
 
     print(f"run_id: {run_id}")
     print(f"latest_epoch: {latest_epoch}")

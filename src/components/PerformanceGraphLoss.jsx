@@ -49,11 +49,12 @@ export default function InvestorGraphLoss() {
             {
               label: "Loss",
               data: losses,
-              borderColor: "#eee",
+              borderColor: "#34d399",
               backgroundColor: "transparent",
               tension: 0.4,
               pointRadius: 0,
-              hoverRadius: 5,
+              hoverRadius: 6,
+              borderWidth: 2,
             },
           ],
         };
@@ -91,28 +92,45 @@ export default function InvestorGraphLoss() {
         color: "#eee",
         font: {
           size: 16,
-          family: "'IBM Plex Mono', monospace",
+          family: "'Inter', sans-serif",
         },
       },
       legend: { display: false },
       tooltip: {
         enabled: true,
-        backgroundColor: "#111",
-        titleColor: "#eee",
-        bodyColor: "#eee",
-        cornerRadius: 0,
-        caretSize: 5,
+        backgroundColor: "rgba(20, 20, 20, 0.95)",
+        titleColor: "#fff",
+        bodyColor: "#fff",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 12,
+        caretSize: 6,
         displayColors: false,
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 12,
+          weight: '600',
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 13,
+        },
         callbacks: {
           label: function (context) {
             const value = context.parsed.y;
-            return `Loss: ${value.toFixed(1)}`;
+            return `Loss: ${value.toFixed(4)}`;
           },
         },
       },
     },
     layout: {
-      padding: 10,
+      padding: {
+        top: 8,
+        bottom: 8,
+        left: 8,
+        right: 8,
+      },
     },
     interaction: {
       mode: "nearest",
@@ -120,33 +138,68 @@ export default function InvestorGraphLoss() {
     },
     scales: {
       x: {
-        title: { display: true, text: "Outer Step", color: "#eee" },
-        ticks: { color: '#eee', autoSkip: true, maxTicksLimit: 14 },
+        title: { 
+          display: true, 
+          text: "Outer Step", 
+          color: "rgba(255, 255, 255, 0.7)",
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12,
+            weight: '500',
+          },
+          padding: { top: 8, bottom: 0 },
+        },
+        ticks: { 
+          color: 'rgba(255, 255, 255, 0.5)', 
+          autoSkip: true, 
+          maxTicksLimit: 12,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11,
+          },
+        },
         grid: {
-          color: "transparent",
-          borderColor: "transparent",
+          color: "rgba(255, 255, 255, 0.05)",
+          borderColor: "rgba(255, 255, 255, 0.1)",
+          borderDash: [2, 2],
+          drawBorder: true,
         },
       },
       y: {
-        title: { display: false, text: "Loss", color: "#eee" },
-        ticks: { color: "#eee" },
+        title: { 
+          display: false, 
+          text: "Loss", 
+          color: "rgba(255, 255, 255, 0.7)",
+        },
+        ticks: { 
+          color: "rgba(255, 255, 255, 0.5)",
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11,
+          },
+        },
         grid: {
-          color: "transparent",
-          borderColor: "transparent",
+          color: "rgba(255, 255, 255, 0.05)",
+          borderColor: "rgba(255, 255, 255, 0.1)",
+          borderDash: [2, 2],
+          drawBorder: true,
         },
       },
     },
     elements: {
       line: {
-        borderColor: "#eee",
-        borderWidth: 1.5,
+        borderColor: "#34d399",
+        borderWidth: 2,
         tension: 0.4,
+        fill: false,
       },
       point: {
         radius: 0,
-        hoverRadius: 5,
-        backgroundColor: "#eee",
-        hoverBackgroundColor: "#eee",
+        hoverRadius: 6,
+        hoverBorderWidth: 2,
+        backgroundColor: "#34d399",
+        hoverBackgroundColor: "#6ee7b7",
+        borderColor: "#fff",
       },
     },
   };
@@ -163,10 +216,12 @@ export default function InvestorGraphLoss() {
       <h3
         className="text-ibm"
         style={{
-          color: "#eee",
-          marginBottom: 8,
+          color: "#ffffff",
+          marginBottom: 12,
           textAlign: "left",
           flexShrink: 0,
+          fontSize: "1.1rem",
+          fontWeight: "600",
         }}
       >
         Loss

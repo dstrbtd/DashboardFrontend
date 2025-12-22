@@ -10,11 +10,12 @@ body, html {
 .app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 3rem 2rem;
-  text-align: center;
-  margin-left: 80px; /* adjusted for sidebar width */
-  margin-bottom: 3rem;
+  align-items: flex-start;
+  padding: 0;
+  text-align: left;
+  margin-left: 0;
+  margin-bottom: 0;
+  width: 100%;
 }
 
 h1 {
@@ -49,30 +50,34 @@ p {
 .heading-3 {
   color: #ffffff;
   text-align: center;
-  margin-top: 15px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 2.75rem;
-  font-weight: 400;
-  line-height: 62px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
 }
 @media (max-width: 768px) {
   .heading-3 {
-    white-space: normal;   /* allow wrapping */
-    word-break: break-word; /* wrap long words if needed */
-    text-align: center;    /* or left, depending on your design */
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    font-size: 2rem;
   }
 }
 
 .text-ibm {
   color: #ffffff;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 16px;
   padding-bottom: 0;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  letter-spacing: -0.01em;
 }
 
 .page-layout {
@@ -87,45 +92,153 @@ p {
   left: 0;
   width: 80px;
   height: 100vh;
-  background-color: #111;
+  background: linear-gradient(180deg, 
+    rgba(15, 15, 15, 0.98) 0%, 
+    rgba(10, 10, 10, 0.95) 100%);
+  backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-right: 1px solid #333;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
   z-index: 100;
 }
 
 /* Logo container pinned to top */
 .logo-container {
-  padding: 1rem 0;
+  padding: 1.5rem 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 0.5rem;
+}
+
+.logo-link {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-link:hover {
+  transform: scale(1.05);
+}
+
+.logo-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  border: 0.5px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.logo-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    transparent 100%);
+}
+
+.logo-link:hover .logo-wrapper {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.15) 0%, 
+    rgba(255, 255, 255, 0.08) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.logo-link:hover .logo-image {
+  filter: brightness(1.15);
 }
 
 /* Nav icons container now sits directly below logo */
 .nav-icons-container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* no vertical centering */
-  gap: 2rem;
+  justify-content: flex-start;
+  gap: 1.5rem;
   width: 100%;
   align-items: center;
-  margin-top: 1rem; /* gap below logo */
+  margin-top: 1rem;
+  padding: 0 0.5rem;
 }
 
 .nav-icon {
-  color: #ccc;
-  font-size: 2rem;
-  transition: color 0.2s ease, transform 0.2s ease;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.nav-icon::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, #60a5fa 0%, #34d399 100%);
+  border-radius: 0 3px 3px 0;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-icon:hover {
   color: #ffffff;
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+}
+
+.nav-icon:hover::before {
+  height: 60%;
 }
 
 .nav-icon.active {
-  color: #f0f0f0;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
-  transform: scale(1.15);
+  color: #ffffff;
+  background: linear-gradient(135deg, 
+    rgba(96, 165, 250, 0.15) 0%, 
+    rgba(52, 211, 153, 0.1) 100%);
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.nav-icon.active::before {
+  height: 70%;
+  background: linear-gradient(180deg, #60a5fa 0%, #34d399 100%);
 }
 
 .app-layout {
@@ -142,43 +255,72 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .tooltip-text {
   visibility: hidden;
   opacity: 0;
   width: max-content;
-  background-color: #222;
+  background: linear-gradient(135deg, 
+    rgba(20, 20, 20, 0.98) 0%, 
+    rgba(15, 15, 15, 0.95) 100%);
+  backdrop-filter: blur(10px);
   color: #fff;
-  font-size: 0.85rem;
-  padding: 5px 10px;
-  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
   position: absolute;
-  left: 70px;
+  left: calc(100% + 12px);
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(-8px);
   white-space: nowrap;
-  transition: opacity 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.08);
   pointer-events: none;
   z-index: 200;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.tooltip-text::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 8px 6px 0;
+  border-color: transparent rgba(20, 20, 20, 0.98) transparent transparent;
 }
 
 .tooltip:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 .nav-icon.disabled {
-  color: #555;
+  color: rgba(255, 255, 255, 0.2);
   pointer-events: none;
   transition: none;
+  opacity: 0.4;
+  filter: grayscale(0.5);
 }
 
 .nav-icon.disabled:hover {
-  color: #555;
+  color: rgba(255, 255, 255, 0.2);
   transform: none;
   cursor: default;
+  background: transparent;
+}
+
+.nav-icon.disabled::before {
+  display: none;
 }
 
 .info-boxes-row {
@@ -200,11 +342,47 @@ p {
 
 .icon-number {
   position: absolute;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: black;
-  font-size: 10px;
-  font-weight: bold;
+  top: 20%;
+  right: 20%;
+  transform: translate(50%, -50%);
+  background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Benchmarks container styling */
+.benchmarks-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding-bottom: 0 !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+@media (min-width: 1025px) {
+  .benchmarks-container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+.benchmarks-iframe {
+  border: none;
+  width: 100%;
+  flex: 1;
+  min-height: 500px;
+  border-radius: 8px;
+  overflow: hidden;
 }

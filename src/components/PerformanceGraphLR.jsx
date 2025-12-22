@@ -70,11 +70,12 @@ export default function InvestorGraphLR() {
             {
               label: 'Learning Rate',
               data: lrValues,
-              borderColor: '#f6f6f7',
+              borderColor: '#f59e0b',
               backgroundColor: 'transparent',
               tension: 0.4,
               pointRadius: 0,
-              hoverRadius: 5,
+              hoverRadius: 6,
+              borderWidth: 2,
               yAxisID: 'y',
             },
           ],
@@ -121,17 +122,29 @@ export default function InvestorGraphLR() {
           ? `Run ${runId} - Learning Rate Over Outer Steps`
           : 'Learning Rate Over Outer Steps',
         color: '#eee',
-        font: { size: 16, family: "'IBM Plex Mono', monospace" },
+        font: { size: 16, family: "'Inter', sans-serif" },
       },
       legend: { display: false },
       tooltip: {
         enabled: true,
-        backgroundColor: '#111',
-        titleColor: '#eee',
-        bodyColor: '#eee',
-        cornerRadius: 0,
-        caretSize: 5,
+        backgroundColor: 'rgba(20, 20, 20, 0.95)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 12,
+        caretSize: 6,
         displayColors: false,
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 12,
+          weight: '600',
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 13,
+        },
         callbacks: {
           label: (context) => {
             const value = context.parsed.y;
@@ -142,27 +155,79 @@ export default function InvestorGraphLR() {
         },
       },
     },
-    layout: { padding: 10 },
+    layout: {
+      padding: {
+        top: 8,
+        bottom: 8,
+        left: 8,
+        right: 8,
+      },
+    },
     interaction: { mode: 'nearest', intersect: false },
     scales: {
       x: {
-        title: { display: true, text: 'Outer Step', color: '#eee' },
-        ticks: { color: '#eee', autoSkip: true, maxTicksLimit: 14 },
-        grid: { color: 'transparent', borderColor: 'transparent' },
+        title: { 
+          display: true, 
+          text: 'Outer Step', 
+          color: 'rgba(255, 255, 255, 0.7)',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12,
+            weight: '500',
+          },
+          padding: { top: 8, bottom: 0 },
+        },
+        ticks: { 
+          color: 'rgba(255, 255, 255, 0.5)', 
+          autoSkip: true, 
+          maxTicksLimit: 12,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11,
+          },
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderDash: [2, 2],
+          drawBorder: true,
+        },
       },
       y: {
-        title: { display: false, text: 'Learning Rate', color: '#eee' },
-        ticks: { color: '#eee' },
-        grid: { color: 'transparent', borderColor: 'transparent' },
+        title: { 
+          display: false, 
+          text: 'Learning Rate', 
+          color: 'rgba(255, 255, 255, 0.7)',
+        },
+        ticks: { 
+          color: 'rgba(255, 255, 255, 0.5)',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11,
+          },
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderDash: [2, 2],
+          drawBorder: true,
+        },
       },
     },
     elements: {
-      line: { borderColor: '#eee', borderWidth: 1.5, tension: 0.4 },
+      line: { 
+        borderColor: '#f59e0b', 
+        borderWidth: 2, 
+        tension: 0.4,
+        fill: false,
+      },
       point: {
         radius: 0,
-        hoverRadius: 5,
-        backgroundColor: '#eee',
-        hoverBackgroundColor: '#eee',
+        hoverRadius: 6,
+        hoverBorderWidth: 2,
+        backgroundColor: '#f59e0b',
+        hoverBackgroundColor: '#fbbf24',
+        borderColor: '#fff',
       },
     },
   };
@@ -171,7 +236,13 @@ export default function InvestorGraphLR() {
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <h3
         className="text-ibm"
-        style={{ color: '#eee', marginBottom: 8, textAlign: 'left' }}
+        style={{
+          color: '#ffffff',
+          marginBottom: 12,
+          textAlign: 'left',
+          fontSize: '1.1rem',
+          fontWeight: '600',
+        }}
       >
         Learning Rate
       </h3>

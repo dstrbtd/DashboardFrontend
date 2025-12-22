@@ -54,12 +54,13 @@ def get_latest_uid_tracker():
     for col in float_cols:
         tables[col] = tables[col].apply(lambda x: f"{x:.4f}" if isinstance(x, (int, float)) else x)
 
-    return tables.fillna("").astype(str), last_updated_time
+    df = tables.reset_index(drop = True).fillna(0).replace("nan",0).astype(str)
+    return tables.reset_index(drop = True).fillna(0).replace("nan",0).astype(str), last_updated_time
 
 def get_latest_timestamp():
     query = f'''
     from(bucket: "{INFLUXDB_BUCKET}")
-      |> range(start: -45m)
+      |> range(start: -360m)
       |> filter(fn: (r) => r._measurement == "miner_scores")
       |> filter(fn: (r) => r.validator_uid == "25")
       |> keep(columns: ["_time", "_field", "_value"])
@@ -79,7 +80,14 @@ def get_latest_timestamp():
 
 # Global cache
 cached_df, cached_last_updated_time = get_latest_uid_tracker()
+print(cached_df[["total.score", "train.score", "train.is_valid", "all_reduce.score"]].head())
 print(cached_last_updated_time)
+breakpoint()
+import json
+data = []
+data.append({str(cached_last_updated_time) : cached_df[["uid", "total.score", "train.score", "train.is_valid", "all_reduce.score"]].sort_values("train.score", ascending = False).head(10).to_dict(orient = "records")})
+with open('/root/validator_scores.json', 'w') as file: json.dump(data , file, indent = 4)
+
 
 app = dash.Dash(__name__)
 app.title = "Mechanism 0 Metrics Dashboard"
@@ -89,17 +97,7 @@ column_defs = [
     {
         "headerName": "UID Metadata",
         "children": [
-            {
-                "field": "uid",
-                "headerName": "UID",
-                # "filter": "agSetFilter",  # checkbox list filter
-                # "floatingFilter": True,         # small search box under header
-                # "filterParams": {
-                #     "values": None,             # auto-populate from rowData
-                #     # "excelMode": "windows",     # Excel-style checkboxes
-                #     "suppressMiniFilter": False # allow search in filter menu
-                # }
-            },
+            {"field": "uid", "headerName": "UID"},
             {"field": "all_reduce.peer_id", "headerName": "Peer ID", "columnGroupShow": "open"},
             {"field": "chaindata.last_updated_block", "headerName": "Metadata Last Updated", "columnGroupShow": "open"},
             {"field": "train.updated_time", "headerName": "Train Score Last Updated", "columnGroupShow": "open"},
@@ -109,7 +107,7 @@ column_defs = [
     {
         "headerName": "Total Scores",
         "children": [
-            {"field": "total.score", "columnGroupShow": "closed"},
+            {"field": "total.score", "columnGroupShow": "closed", "sort": "desc"},
         ]
     },
     {
@@ -154,11 +152,13 @@ column_defs = [
 
 app.layout = html.Div([ 
     html.Div([
-        html.Div("Select UIDs:", 
+        html.Label("Select UIDs:", 
                  style={
-                    "color": "white",
-                    "marginRight": "10px",   # remove fixed width, just margin
-                    "whiteSpace": "nowrap"   # prevent wrapping
+                    "color": "rgba(255, 255, 255, 0.8)",
+                    "fontSize": "14px",
+                    "fontWeight": "500",
+                    "marginRight": "12px",
+                    "whiteSpace": "nowrap"
                 }),
         dcc.Dropdown(
             id="uid-filter",
@@ -166,9 +166,18 @@ app.layout = html.Div([
             multi=True,
             placeholder="Choose UIDs...",
             className="dark-dropdown",
-            style={"flex": "1"}
+            style={"width": "300px", "flexShrink": 0}
         )
-    ], style={"display": "flex", "alignItems": "center", "marginBottom": "20px", "flexWrap": "wrap","gap": "10px"}),   # add spacing between label and dropdow
+    ], style={
+        "display": "flex", 
+        "justifyContent": "center",
+        "alignItems": "center", 
+        "marginBottom": "20px",
+        "padding": "12px 16px",
+        "backgroundColor": "rgba(20, 20, 20, 0.5)",
+        "borderRadius": "8px",
+        "border": "1px solid rgba(255, 255, 255, 0.08)"
+    }),
 
     dag.AgGrid(
         id="metrics-grid",
@@ -177,7 +186,7 @@ app.layout = html.Div([
         defaultColDef={
             "sortable": True,
             "resizable": True,
-            "floatingFilter": True,
+            "filter": True,
             "cellStyle": {
                 "display": "flex",
                 "justifyContent": "center",
@@ -187,7 +196,8 @@ app.layout = html.Div([
         },
         dashGridOptions={
             "suppressFieldDotNotation": True,
-            "sideBar": {"toolPanels": ["filters"]}  # optional filter sidebar
+            "sideBar": {"toolPanels": ["filters"]},  # optional filter sidebar
+            "sortState": [{"colId": "total.score", "sort": "desc"}]
         },
         style={"height": "90%", "width": "100%", "marginBottom": "20px"},
         className="ag-theme-alpine-dark"
@@ -200,6 +210,7 @@ app.layout = html.Div([
 
 @app.callback(
     Output("metrics-grid", "rowData"),
+    Output("metrics-grid", "sortState"),
     Output("last-updated", "children"),
     Input("uid-filter", "value"),
     Input("interval", "n_intervals"),
@@ -208,7 +219,7 @@ def filter_and_reload_data(selected_uids, n_intervals):
     print("Reload triggered by dropdown or timer")
     print("Selected UIDs:", selected_uids)
 
-    global cached_df, cached_last_updated_time
+    global cached_df, cached_last_updated_time, data
     
     try:
 
@@ -221,7 +232,10 @@ def filter_and_reload_data(selected_uids, n_intervals):
             cached_df = df
             cached_last_updated_time = last_updated_time
             print("Cache refreshed from InfluxDB")
-            print(f"last_updated_time {last_updated_time}")
+            print(f"last_updated_time {cached_last_updated_time}")
+            print(cached_df[["total.score", "train.is_valid"]].head())
+            data.append({str(cached_last_updated_time) : cached_df[["uid", "total.score", "train.score", "train.is_valid", "all_reduce.score"]].sort_values("train.score", ascending = False).head(10).to_dict(orient = "records")})
+            with open('/root/validator_scores.json', 'w') as file: json.dump(data , file, indent = 4)
         else:
             df = cached_df
             print("Using cached data")
@@ -230,11 +244,15 @@ def filter_and_reload_data(selected_uids, n_intervals):
         if selected_uids:
             df = df[df["uid"].isin(selected_uids)]
 
-        return df.to_dict("records"), f"Last updated: {cached_last_updated_time.tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
+        # Maintain sort state
+        sort_state = [{"colId": "total.score", "sort": "desc"}]
+        
+        return df.to_dict("records"), sort_state, f"Last updated: {cached_last_updated_time.tz_convert('Africa/Cairo').strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
 
     except Exception as e:
         print("Reload error:", e)
-        return [], f"Last updated: error ({e})"
+        sort_state = [{"colId": "total.score", "sort": "desc"}]
+        return [], sort_state, f"Last updated: error ({e})"
 
 if __name__ == "__main__":
     app.run(debug=False, port=22177)

@@ -29,7 +29,7 @@ INFLUXDB_MEASUREMENT = "mechanism1_metrics"
 client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
 query_api = client.query_api()
 
-def shorten_middle(value, prefix=10, suffix=10):
+def shorten_middle(value, prefix=10, suffix=2):
     if value is None:
         return ""
     s = str(value)
@@ -81,6 +81,7 @@ def load_mechanism1_metrics(current_block = None):
 
     # Final display format for time (no seconds/ms)
     filtered_df["_time"] = filtered_df["_time"].dt.strftime("%Y-%m-%d %H:%M")
+    filtered_df["last_update"] = pd.to_datetime(filtered_df["last_update"]).dt.strftime("%Y-%m-%d %H:%M")
 
     # Shorten long strings
     if "hotkey" in filtered_df.columns:
@@ -102,6 +103,7 @@ def load_mechanism1_metrics(current_block = None):
         "uid": "UID",
         "hotkey": "Hotkey",
         "gist_url": "Gist URL",
+        "last_update": "Last Update",
     }
     filtered_df = filtered_df.rename(columns=rename_map)
 
@@ -129,22 +131,22 @@ app.title = "Mechanism 1 Metrics Dashboard"
 app.layout = html.Div([
     html.Div(
         id="meta-boxes",
+        className="info-boxes-row",
         style={
-            "display": "flex",
-            "flexWrap": "wrap",
-            "gap": "20px",
-            "marginBottom": "20px",
-            "color": "white",
-            "width": "100%"
+            "marginBottom": "2.5rem"
         }
     ),
 
     html.Div([
-        html.Div("Select UIDs:",
+        html.Label("Select Block:",
                  style={
-                    "color": "white",
-                    "marginRight": "10px",   # remove fixed width, just margin
-                    "whiteSpace": "nowrap"   # prevent wrapping
+                    "color": "rgba(255, 255, 255, 0.8)",
+                    "fontSize": "14px",
+                    "fontWeight": "500",
+                    "marginRight": "12px",
+                    "whiteSpace": "nowrap",
+                    "display": "flex",
+                    "alignItems": "center"
                 }),
         dcc.Dropdown(
             id="current_block_dropdown",
@@ -152,9 +154,18 @@ app.layout = html.Div([
             multi=False,
             value=cached_current_block,
             className="dark-dropdown",
-            style={"flex": "1"}
+            style={"width": "250px", "flexShrink": 0}
         )
-    ], style={"display": "flex", "alignItems": "center", "marginBottom": "20px", "flexWrap": "wrap","gap": "10px"}),   # add spacing between label and dropdow
+    ], style={
+        "display": "flex", 
+        "justifyContent": "center",
+        "alignItems": "center", 
+        "marginBottom": "20px",
+        "padding": "12px 16px",
+        "backgroundColor": "rgba(20, 20, 20, 0.5)",
+        "borderRadius": "8px",
+        "border": "1px solid rgba(255, 255, 255, 0.08)"
+    }),
 
     dag.AgGrid(
         id="subnet1-grid",
@@ -213,28 +224,14 @@ def reload_data(_, selected_block):
 
         _, filtered_cached_df, cached_meta, _ = load_mechanism1_metrics(selected_block)
 
-        # Build pretty metadata boxes
+        # Build pretty metadata boxes matching Performance page style
         meta_boxes = [
             html.Div(
                 [
-                    html.Div(label, style={
-                        "fontWeight": "700",
-                        "fontSize": "14px",
-                        "marginBottom": "4px",      # 🔹 small space under title
-                        "letterSpacing": "0.03em",  # optional: slightly spaced letters
-                        "textTransform": "uppercase"  # optional: ALL CAPS}),
-                    }),
-                    html.Div(str(cached_meta.get(key, "")), style={"fontWeight": "500", "fontSize": "18px"})
+                    html.Div(label, className="info-label"),
+                    html.Div(str(cached_meta.get(key, "")), className="info-value")
                 ],
-                style={
-                    "border": "1px solid #555",
-                    "borderRadius": "8px",
-                    "padding": "10px 15px",
-                    "minWidth": "150px",
-                    "textAlign": "center",
-                    "backgroundColor": "#111",
-                    "flex": 1
-                }
+                className="info-box"
             )
             for key, label in [
                 ("dataset", "Dataset"),

@@ -18,18 +18,15 @@ const Sidebar = () => {
           href="https://www.dstrbtd.ai/" 
           target="_blank" 
           rel="noopener noreferrer" 
-          style={{ display: 'inline-block' }}
+          className="logo-link"
         >
-          <img
-            src="/dstrbdt_logo.png"
-            alt="Dstrbdt Logo"
-            style={{ 
-              width: 60, 
-              height: 60,
-              borderRadius: '50%',
-              cursor: 'pointer',
-            }}
-          />
+          <div className="logo-wrapper">
+            <img
+              src="/dstrbdt_logo.png"
+              alt="Dstrbdt Logo"
+              className="logo-image"
+            />
+          </div>
         </a>
       </div>
 
@@ -38,7 +35,7 @@ const Sidebar = () => {
           <div className="tooltip" key={to} style={{ position: 'relative' }}>
             {disabled ? (
               <div className="nav-icon disabled" style={{ cursor: 'default', position: 'relative' }}>
-                <Icon size={32} />
+                <Icon size={24} />
                 {(to === '/benchmarks_mech0' || to === '/benchmarks_mech1') && (
                   <span className="icon-number">
                     {to === '/benchmarks_mech0' ? 0 : 1}
@@ -53,7 +50,7 @@ const Sidebar = () => {
                 }
                 style={{ position: 'relative' }}
               >
-                <Icon size={32} />
+                <Icon size={24} />
                 {(to === '/benchmarks_mech0' || to === '/benchmarks_mech1') && (
                   <span className="icon-number">
                     {to === '/benchmarks_mech0' ? 0 : 1}

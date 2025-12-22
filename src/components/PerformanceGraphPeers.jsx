@@ -62,11 +62,12 @@ export default function InvestorGraphPeers() {
             {
               label: 'Number of Peers',
               data: peerCounts,
-              borderColor: '#eee',
+              borderColor: '#a78bfa',
               backgroundColor: 'transparent',
               tension: 0.4,
               pointRadius: 0,
-              hoverRadius: 5,
+              hoverRadius: 6,
+              borderWidth: 2,
               yAxisID: 'y',
             },
           ],
@@ -115,18 +116,30 @@ export default function InvestorGraphPeers() {
         color: '#eee',
         font: {
           size: 16,
-          family: "'IBM Plex Mono', monospace",
+          family: "'Inter', sans-serif",
         },
       },
       legend: { display: false },
       tooltip: {
         enabled: true,
-        backgroundColor: '#111',
-        titleColor: '#eee',
-        bodyColor: '#eee',
-        cornerRadius: 0,
-        caretSize: 5,
+        backgroundColor: 'rgba(20, 20, 20, 0.95)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 12,
+        caretSize: 6,
         displayColors: false,
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 12,
+          weight: '600',
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 13,
+        },
         callbacks: {
           label: function (context) {
             const value = context.parsed.y;
@@ -136,7 +149,12 @@ export default function InvestorGraphPeers() {
       },
     },
     layout: {
-      padding: 10,
+      padding: {
+        top: 8,
+        bottom: 8,
+        left: 8,
+        right: 8,
+      },
     },
     interaction: {
       mode: 'nearest',
@@ -144,33 +162,68 @@ export default function InvestorGraphPeers() {
     },
     scales: {
       x: {
-        title: { display: true, text: 'Outer Step', color: '#eee' },
-        ticks: { color: '#eee', autoSkip: true, maxTicksLimit: 14 },
+        title: { 
+          display: true, 
+          text: 'Outer Step', 
+          color: 'rgba(255, 255, 255, 0.7)',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12,
+            weight: '500',
+          },
+          padding: { top: 8, bottom: 0 },
+        },
+        ticks: { 
+          color: 'rgba(255, 255, 255, 0.5)', 
+          autoSkip: true, 
+          maxTicksLimit: 12,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11,
+          },
+        },
         grid: {
-          color: 'transparent',
-          borderColor: 'transparent',
+          color: 'rgba(255, 255, 255, 0.05)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderDash: [2, 2],
+          drawBorder: true,
         },
       },
       y: {
-        title: { display: false, text: 'Peers', color: '#eee' },
-        ticks: { color: '#eee' },
+        title: { 
+          display: false, 
+          text: 'Peers', 
+          color: 'rgba(255, 255, 255, 0.7)',
+        },
+        ticks: { 
+          color: 'rgba(255, 255, 255, 0.5)',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11,
+          },
+        },
         grid: {
-          color: 'transparent',
-          borderColor: 'transparent',
+          color: 'rgba(255, 255, 255, 0.05)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderDash: [2, 2],
+          drawBorder: true,
         },
       },
     },
     elements: {
       line: {
-        borderColor: '#eee',
-        borderWidth: 1.5,
+        borderColor: '#a78bfa',
+        borderWidth: 2,
         tension: 0.4,
+        fill: false,
       },
       point: {
         radius: 0,
-        hoverRadius: 5,
-        backgroundColor: '#eee',
-        hoverBackgroundColor: '#eee',
+        hoverRadius: 6,
+        hoverBorderWidth: 2,
+        backgroundColor: '#a78bfa',
+        hoverBackgroundColor: '#c4b5fd',
+        borderColor: '#fff',
       },
     },
   };
@@ -187,10 +240,12 @@ export default function InvestorGraphPeers() {
       <h3
         className="text-ibm"
         style={{
-          color: '#eee',
-          marginBottom: 8,
+          color: '#ffffff',
+          marginBottom: 12,
           textAlign: 'left',
           flexShrink: 0,
+          fontSize: '1.1rem',
+          fontWeight: '600',
         }}
       >
         Number of Peers

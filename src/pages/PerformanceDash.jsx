@@ -71,12 +71,7 @@ const InvestorDashboard = () => {
               href="https://huggingface.co/distributed/llama-4b"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: "white",
-                textDecoration: "underline",
-                fontWeight: "600",
-                cursor: "pointer"
-              }}
+              className="model-link"
             >
               {modelanme}
             </a>
