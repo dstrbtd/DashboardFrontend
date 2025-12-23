@@ -82,13 +82,13 @@ const InvestorDashboard = () => {
       {/* Graphs grid */}
       <div className="graphs-grid">
         <div className="graph-item">
-          <InvestorGraphPerplexity />
-        </div>
-        <div className="graph-item">
           <InvestorGraphLoss />
         </div>
         <div className="graph-item">
           <InvestorGraphPeers />
+        </div>
+        <div className="graph-item">
+          <InvestorGraphPerplexity />
         </div>
         <div className="graph-item">
           <InvestorGraphLR />
