@@ -36,12 +36,27 @@ async def notify_clients():
             else:
                 new_max_epoch = last_epoch
 
+            # Always update last_data, but only update last_epoch if we found a new one
+            data_json = json.dumps(data)
+            
+            # Debug: print data summary
+            print(f"Data summary:")
+            print(f"  - run_id: {data.get('run_id')}")
+            print(f"  - global_loss_data keys: {list(data.get('global_loss_data', {}).keys())}")
+            print(f"  - outer_steps count: {len(data.get('global_loss_data', {}).get('outer_steps', []))}")
+            print(f"  - losses count: {len(data.get('global_loss_data', {}).get('losses', []))}")
+            print(f"  - validators count: {len(data.get('validators', {}))}")
+            print(f"  - miners count: {len(data.get('miners', {}))}")
+            
             if new_max_epoch > last_epoch:
                 print(f"📈 New epoch {new_max_epoch} detected \n")
-                last_data = json.dumps(data)
                 last_epoch = new_max_epoch
+            elif last_data is None:
+                print(f"📊 Initial data loaded (epoch: {new_max_epoch if new_max_epoch != -1 else 'N/A'}) \n")
             else:
-                print(f"⏳ No new epoch (latest: {last_epoch}) — serving cached data \n")
+                print(f"⏳ No new epoch (latest: {last_epoch}) — updating data \n")
+            
+            last_data = data_json
 
             for ws in connected.copy():
                 try:

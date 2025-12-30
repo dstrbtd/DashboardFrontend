@@ -14,15 +14,18 @@ html {
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Base font and body styles */
 body {
-  font-family: Montserrat, sans-serif;
+  font-family: 'Inter', Montserrat, sans-serif;
   font-size: 16px;
   line-height: 1.6;
   font-weight: 400;
-  background-color: #000000;
+  background-color: #08090a;
   color: #e0e0e0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

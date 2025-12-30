@@ -5,9 +5,9 @@ import '../App.css';
 
 const Sidebar = () => {
   const navItems = [
-    { to: '/performance', icon: FaChartLine, label: 'Performance', disabled: false },
-    { to: '/benchmarks_mech0', icon: FaTrophy, label: 'Benchmarks M0', disabled: false },
-    { to: '/benchmarks_mech1', icon: FaTrophy, label: 'Benchmarks M1', disabled: false },
+    { to: '/train', icon: FaChartLine, label: 'Training', disabled: false },
+    { to: '/mech0', icon: FaTrophy, label: 'Mechanism 0', disabled: false },
+    { to: '/mech1', icon: FaTrophy, label: 'Mechanism 1', disabled: false },
     { to: '/miner', icon: FaHammer, label: 'Miner', disabled: true },
   ];
 
@@ -21,11 +21,11 @@ const Sidebar = () => {
           className="logo-link"
         >
           <div className="logo-wrapper">
-            <img
-              src="/dstrbdt_logo.png"
-              alt="Dstrbdt Logo"
+          <img
+            src="/dstrbdt_logo.png"
+            alt="Dstrbdt Logo"
               className="logo-image"
-            />
+          />
           </div>
         </a>
       </div>
@@ -36,9 +36,9 @@ const Sidebar = () => {
             {disabled ? (
               <div className="nav-icon disabled" style={{ cursor: 'default', position: 'relative' }}>
                 <Icon size={24} />
-                {(to === '/benchmarks_mech0' || to === '/benchmarks_mech1') && (
+                {(to === '/mech0' || to === '/mech1') && (
                   <span className="icon-number">
-                    {to === '/benchmarks_mech0' ? 0 : 1}
+                    {to === '/mech0' ? 0 : 1}
                   </span>
                 )}
               </div>
@@ -51,9 +51,9 @@ const Sidebar = () => {
                 style={{ position: 'relative' }}
               >
                 <Icon size={24} />
-                {(to === '/benchmarks_mech0' || to === '/benchmarks_mech1') && (
+                {(to === '/mech0' || to === '/mech1') && (
                   <span className="icon-number">
-                    {to === '/benchmarks_mech0' ? 0 : 1}
+                    {to === '/mech0' ? 0 : 1}
                   </span>
                 )}
               </NavLink>

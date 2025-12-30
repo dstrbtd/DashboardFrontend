@@ -1,0 +1,181 @@
+/* Mechanism 0 Dashboard - Consistent with Mech 1 Design */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Design System Variables (shared with Mech1) */
+:root {
+  /* Monochrome Palette */
+  --bg-void: #08090a;
+  --bg-primary: #0c0d0f;
+  --bg-elevated: #111214;
+  --bg-surface: #16181b;
+  --bg-panel: rgba(22, 24, 27, 0.85);
+  
+  /* Borders & Lines */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Text Hierarchy */
+  --text-primary: #f4f4f5;
+  --text-secondary: rgba(244, 244, 245, 0.7);
+  --text-tertiary: rgba(244, 244, 245, 0.5);
+  --text-muted: rgba(244, 244, 245, 0.35);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(22, 24, 27, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Main Dashboard Container */
+.mech0-dashboard {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  flex: 1;
+  background: var(--bg-void);
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Subtle gradient overlay */
+.mech0-dashboard::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.01) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 60% at 100% 100%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Main Content Area */
+.mech0-dashboard .dashboard-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  margin-left: 80px;
+  width: calc(100% - 80px); /* Explicit width calculation */
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Header */
+.mech0-dashboard .dashboard-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) 0;
+}
+
+.mech0-dashboard .dashboard-header.simple h1 {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Main Canvas */
+.mech0-dashboard .main-canvas {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Iframe Container */
+.mech0-dashboard .iframe-container {
+  flex: 1;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: 600px;
+}
+
+.mech0-dashboard .dashboard-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  min-height: 600px;
+}
+
+/* Footer */
+.mech0-dashboard .dashboard-footer {
+  grid-column: 1 / -1;
+  padding: var(--spacing-md) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.mech0-dashboard .footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.mech0-dashboard .footer-brand a {
+  color: var(--text-tertiary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mech0-dashboard .footer-brand a:hover {
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mech0-dashboard .dashboard-content {
+    padding: var(--spacing-md);
+    margin-left: 0;
+    padding-bottom: 80px;
+  }
+  
+  .mech0-dashboard .iframe-container {
+    min-height: 400px;
+  }
+}
+

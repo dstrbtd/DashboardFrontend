@@ -24,8 +24,8 @@ else:
 def initialize_influx_client() -> InfluxDBClient:
     client = InfluxDBClient(
         url="http://161.97.156.125:8086",
-        token=os.getenv("INFLUXDB_TOKEN"),
-        org="distributed-training",
+        token=os.getenv("INFLUXDB_TOKEN_MECHANISM_0"),
+        org=os.getenv("INFLUXDB_ORG"),
         timeout=260_000
     )
     return client
@@ -40,48 +40,119 @@ def get_active_miners_bt_metagraph() -> int:
     ])
     return active_miners
 
-def get_latest_run_and_epoch_validator_influx(days: int = 7) -> tuple[str, int]:
+def get_latest_run_and_epoch_validator_influx(days: int = 30) -> tuple[str, int]:
     """
     Return (latest_run_id, latest_epoch_for_that_run).
     Logic stays clear and debuggable.
+    Searches across multiple measurements to find run_ids.
     """
     client = initialize_influx_client()
     query_api = client.query_api()
 
-    flux_run_ids = f'''
-    from(bucket: "distributed-training-metrics")
+    # Search across multiple measurements that might contain run_id
+    # miner_scores has run_id as a field
+    # evaluation_metrics has run_id in the tag field (format: "{run_id}.{epoch}.{step}")
+    run_ids = []
+    
+    # Query miner_scores for run_id field
+    flux_run_ids_miner = f'''
+    from(bucket: "mechanism-0")
       |> range(start: -{days}d)
-      |> filter(fn: (r) => r._measurement == "allreduce_operations")
+      |> filter(fn: (r) => r._measurement == "miner_scores")
       |> filter(fn: (r) => exists r.run_id)
       |> keep(columns: ["run_id"])
       |> group()
       |> distinct(column: "run_id")
     '''
-
-    result_run = query_api.query(org="distributed-training", query=flux_run_ids)
-    run_ids = [r.values["_value"] for t in result_run for r in t.records]
-
+    
+    try:
+        result_run = query_api.query(org="DSTRBTD", query=flux_run_ids_miner)
+        measurement_run_ids = [r.values["_value"] for t in result_run for r in t.records]
+        run_ids.extend(measurement_run_ids)
+    except Exception as e:
+        print(f"Warning: Could not query miner_scores for run_ids: {e}")
+    
+    # Query evaluation_metrics - extract run_id from tag field (tag format: "{run_id}.{epoch}.{step}")
+    flux_run_ids_eval = f'''
+    import "strings"
+    from(bucket: "mechanism-0")
+      |> range(start: -{days}d)
+      |> filter(fn: (r) => r._measurement == "evaluation_metrics")
+      |> filter(fn: (r) => exists r.tag)
+      |> map(fn: (r) => ({{
+          r with run_id: strings.split(v: r.tag, t: ".")[0]
+        }}))
+      |> keep(columns: ["run_id"])
+      |> group()
+      |> distinct(column: "run_id")
+    '''
+    
+    try:
+        result_run = query_api.query(org="DSTRBTD", query=flux_run_ids_eval)
+        measurement_run_ids = [r.values["_value"] for t in result_run for r in t.records]
+        run_ids.extend(measurement_run_ids)
+    except Exception as e:
+        print(f"Warning: Could not query evaluation_metrics for run_ids: {e}")
+    
+    # Remove duplicates and convert to int for proper sorting
+    run_ids = list(set(run_ids))
+    
     if not run_ids:
-        raise ValueError(f"No run_ids found in the past {days} days.")
+        raise ValueError(f"No run_ids found in the past {days} days in miner_scores or evaluation_metrics.")
 
     latest_run_id = max(run_ids, key=lambda x: int(x))
 
-    flux_epochs = f'''
-    from(bucket: "distributed-training-metrics")
+    # Search for epochs across multiple measurements
+    epochs = []
+    
+    # Query miner_scores for epochs
+    flux_epochs_miner = f'''
+    from(bucket: "mechanism-0")
       |> range(start: -30d)
-      |> filter(fn: (r) => r._measurement == "allreduce_operations")
+      |> filter(fn: (r) => r._measurement == "miner_scores")
       |> filter(fn: (r) => r.run_id == "{latest_run_id}")
       |> filter(fn: (r) => exists r.epoch)
       |> keep(columns: ["epoch"])
       |> group()
       |> distinct(column: "epoch")
     '''
-
-    result_epochs = query_api.query(org="distributed-training", query=flux_epochs)
-    epochs = [int(r.values["_value"]) for t in result_epochs for r in t.records]
+    
+    try:
+        result_epochs = query_api.query(org="DSTRBTD", query=flux_epochs_miner)
+        measurement_epochs = [int(r.values["_value"]) for t in result_epochs for r in t.records]
+        epochs.extend(measurement_epochs)
+    except Exception as e:
+        print(f"Warning: Could not query miner_scores for epochs: {e}")
+    
+    # Query evaluation_metrics - extract epoch from tag field (tag format: "{run_id}.{epoch}.{step}")
+    flux_epochs_eval = f'''
+    import "strings"
+    from(bucket: "mechanism-0")
+      |> range(start: -30d)
+      |> filter(fn: (r) => r._measurement == "evaluation_metrics")
+      |> filter(fn: (r) => exists r.tag)
+      |> map(fn: (r) => ({{
+          r with run_id: strings.split(v: r.tag, t: ".")[0],
+          epoch: int(v: strings.split(v: r.tag, t: ".")[1])
+        }}))
+      |> filter(fn: (r) => r.run_id == "{latest_run_id}")
+      |> keep(columns: ["epoch"])
+      |> group()
+      |> distinct(column: "epoch")
+    '''
+    
+    try:
+        result_epochs = query_api.query(org="DSTRBTD", query=flux_epochs_eval)
+        measurement_epochs = [int(r.values["_value"]) for t in result_epochs for r in t.records]
+        epochs.extend(measurement_epochs)
+    except Exception as e:
+        print(f"Warning: Could not query evaluation_metrics for epochs: {e}")
+    
+    # Remove duplicates
+    epochs = list(set(epochs))
 
     if not epochs:
-        raise ValueError(f"No epochs found for run_id {latest_run_id}")
+        raise ValueError(f"No epochs found for run_id {latest_run_id} in miner_scores or evaluation_metrics")
 
     latest_epoch = max(epochs)
 
@@ -98,10 +169,10 @@ def get_global_model_loss_influx(run_id: str) -> dict:
 
     query = f"""
     import "strings"
-    from(bucket: "distributed-training-metrics")
+    from(bucket: "mechanism-0")
         |> range(start: -365d)
         |> filter(fn: (r) => r._measurement == "evaluation_metrics")
-        |> filter(fn: (r) => r.tag == "{run_id}.0.0" or r.tag =~ /^{run_id}\./)
+        |> filter(fn: (r) => r.tag == "{run_id}.0.0" or r.tag =~ /^{run_id}\\./)
         |> filter(fn: (r) => r.task == "fineweb")
         |> map(fn: (r) => ({{
                 r with outer_step: int(v: strings.split(v: r.tag, t: ".")[1])
@@ -112,7 +183,7 @@ def get_global_model_loss_influx(run_id: str) -> dict:
         |> sort(columns: ["outer_step"])         // re-sort by step ascending
     """
 
-    results = query_api.query(org="distributed-training", query=query)
+    results = query_api.query(org="DSTRBTD", query=query)
 
     records_list = []
     for table in results:
@@ -140,27 +211,46 @@ def get_global_model_loss_influx(run_id: str) -> dict:
             outer_steps.append(outer_step)
             losses.append(score)
 
-    return {
+    result = {
         "outer_steps": outer_steps,
         "losses": losses,
     }
+    
+    if not outer_steps or not losses:
+        print(f"Warning: No global_loss_data found for run_id {run_id}")
+        print(f"  outer_steps count: {len(outer_steps)}, losses count: {len(losses)}")
+    
+    return result
 
 def get_miner_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> dict:
+    """
+    Get miner training data including loss per epoch.
+    Note: This queries training_metrics which may not exist for all runs.
+    Returns empty dict if data is not available.
+    """
     client = initialize_influx_client()
     query_api = client.query_api()
 
-    flux = f'''
-    from(bucket: "distributed-training-metrics")
-        |> range(start: -{days}d)
-        |> filter(fn: (r) => r._measurement == "training_metrics")
-        |> filter(fn: (r) => r._field == "loss")
-        |> filter(fn: (r) => r["run_id"] == "{run_id}")
-        |> group(columns: ["miner_uid", "epoch", "run_id"])
-        |> mean()
-    '''
-    df_train = query_api.query_data_frame(flux)
-    if isinstance(df_train, list):
-        df_train = pd.concat(df_train, ignore_index=True)
+    try:
+        flux = f'''
+        from(bucket: "mechanism-0")
+            |> range(start: -{days}d)
+            |> filter(fn: (r) => r._measurement == "training_metrics")
+            |> filter(fn: (r) => r._field == "loss")
+            |> filter(fn: (r) => r["run_id"] == "{run_id}")
+            |> group(columns: ["miner_uid", "epoch", "run_id"])
+            |> mean()
+        '''
+        df_train = query_api.query_data_frame(flux)
+        if isinstance(df_train, list):
+            df_train = pd.concat(df_train, ignore_index=True)
+    except Exception as e:
+        print(f"Warning: Could not query miner data from training_metrics: {e}")
+        return {}
+    
+    if df_train.empty:
+        print(f"Warning: No miner training data found for run_id {run_id} (training_metrics measurement may not exist)")
+        return {}
 
     df_train = df_train.rename(columns={"_value": "loss"})
     df_train = df_train[["miner_uid", "run_id", "epoch", "loss"]].dropna().reset_index(drop=True)
@@ -178,25 +268,39 @@ def get_miner_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> 
     return miners_dict
 
 def get_validator_influx_data(run_id: str = "6", epoch: int = 0, days: int = 30) -> dict:
+    """
+    Get validator data including learning rate and number of peers.
+    Note: This queries allreduce_operations which may not exist for all runs.
+    Returns empty dict if data is not available.
+    """
     client = initialize_influx_client()
     query_api = client.query_api()
 
-    flux = f'''
-    from(bucket: "distributed-training-metrics")
-        |> range(start: -{days}d)
-        |> filter(fn: (r) => r._measurement == "allreduce_operations")
-        |> filter(fn: (r) => exists r.epoch and exists r.validator_uid and exists r._value)
-        |> filter(fn: (r) => r["run_id"] == "{run_id}")
-        |> filter(fn: (r) => int(v: r.epoch) <= {epoch})
-        |> drop(columns: ["_start", "_stop"])
-        |> group(columns: ["validator_uid", "epoch", "run_id", "_field"])
-        |> max()
-        |> pivot(rowKey: ["epoch", "validator_uid"], columnKey: ["_field"], valueColumn: "_value")
-        |> sort(columns: ["epoch"])
-    '''
-    df_allreduce = query_api.query_data_frame(flux)
-    if isinstance(df_allreduce, list):
-        df_allreduce = pd.concat(df_allreduce, ignore_index=True)
+    try:
+        flux = f'''
+        from(bucket: "mechanism-0")
+            |> range(start: -{days}d)
+            |> filter(fn: (r) => r._measurement == "allreduce_operations")
+            |> filter(fn: (r) => exists r.epoch and exists r.validator_uid and exists r._value)
+            |> filter(fn: (r) => r["run_id"] == "{run_id}")
+            |> filter(fn: (r) => int(v: r.epoch) <= {epoch})
+            |> drop(columns: ["_start", "_stop"])
+            |> group(columns: ["validator_uid", "epoch", "run_id", "_field"])
+            |> max()
+            |> pivot(rowKey: ["epoch", "validator_uid"], columnKey: ["_field"], valueColumn: "_value")
+            |> sort(columns: ["epoch"])
+        '''
+        df_allreduce = query_api.query_data_frame(flux)
+        if isinstance(df_allreduce, list):
+            df_allreduce = pd.concat(df_allreduce, ignore_index=True)
+    except Exception as e:
+        print(f"Warning: Could not query validator data from allreduce_operations: {e}")
+        return {}
+    
+    # Handle empty DataFrame or missing columns
+    if df_allreduce.empty or "participating_miners" not in df_allreduce.columns:
+        print(f"Warning: No validator data found for run_id {run_id} (allreduce_operations measurement may not exist)")
+        return {}
 
     df_allreduce["participating_miners"] = df_allreduce["participating_miners"].round().astype(int)
     df_allreduce["succesful_miners"] = df_allreduce["participating_miners"] - df_allreduce["failed_miners"].fillna(0).astype(int)
@@ -248,7 +352,7 @@ def generate_dashboard_data(save_json: bool = True) -> dict:
     """
 
     run_id, latest_epoch = get_latest_run_and_epoch_validator_influx()
-    # run_id = 1
+    run_id = 5
     # latest_epoch = 50
 
     print(f"run_id: {run_id}")

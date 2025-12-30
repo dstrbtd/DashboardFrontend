@@ -5,6 +5,7 @@ import PerformanceDash from './pages/PerformanceDash';
 import BenchmarksMech0Dash from './pages/BenchmarksMech0Dash';
 import BenchmarksMech1Dash from './pages/BenchmarksMech1Dash'; 
 import Sidebar from './components/Sidebar';
+import './App.css';
 
 function App() {
   return (
@@ -12,15 +13,15 @@ function App() {
       <div className="page-layout">
         <Sidebar />
         <Routes>
-          <Route path="/" element={<Navigate to="/performance" replace />} />
+          <Route path="/" element={<Navigate to="/train" replace />} />
 
-          <Route path="/performance" element={<PerformanceDash />} />
+          <Route path="/train" element={<PerformanceDash />} />
 
-          {/* mech0 (original) */}
-          <Route path="/benchmarks_mech0" element={<BenchmarksMech0Dash />} />
+          {/* mech0 */}
+          <Route path="/mech0" element={<BenchmarksMech0Dash />} />
 
-          {/* mech1 (new) */}
-          <Route path="/benchmarks_mech1" element={<BenchmarksMech1Dash />} />
+          {/* mech1 */}
+          <Route path="/mech1" element={<BenchmarksMech1Dash />} />
 
           <Route path="/miner" element={<MinerDash />} />
         </Routes>

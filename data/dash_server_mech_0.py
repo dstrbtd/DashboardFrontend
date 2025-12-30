@@ -23,9 +23,9 @@ else:
 # InfluxDB Config
 # ------------------------------
 INFLUXDB_URL = os.getenv("INFLUXDB_URL")
-INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
+INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN_MECHANISM_0")
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
-INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
+INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET_MECHANISM_0")
 
 client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
 query_api = client.query_api()
@@ -153,21 +153,21 @@ app.layout = html.Div([
     html.Div([
         html.Div([
             html.Label("Select UIDs:", 
-                     style={
+                 style={
                         "color": "rgba(255, 255, 255, 0.8)",
                         "fontSize": "14px",
                         "fontWeight": "500",
                         "marginRight": "12px",
                         "whiteSpace": "nowrap"
-                    }),
-            dcc.Dropdown(
-                id="uid-filter",
-                options=[{"label": str(uid), "value": str(uid)} for uid in sorted([int(uid) for uid in cached_df.uid])],
-                multi=True,
-                placeholder="Choose UIDs...",
-                className="dark-dropdown",
+                }),
+        dcc.Dropdown(
+            id="uid-filter",
+            options=[{"label": str(uid), "value": str(uid)} for uid in sorted([int(uid) for uid in cached_df.uid])],
+            multi=True,
+            placeholder="Choose UIDs...",
+            className="dark-dropdown",
                 style={"width": "300px", "flexShrink": 0}
-            )
+        )
         ], style={
             "display": "flex", 
             "justifyContent": "center",
