@@ -8,7 +8,7 @@ import '../styles/Mech1Dashboard.css';
 const SHOW_METRICS_PANEL = false;
 
 // API endpoint
-const API_BASE_URL = import.meta.env.VITE_MECH1_API_URL || 'http://localhost:22557';
+const API_BASE_URL = import.meta.env.VITE_MECH1_API_URL || 'https://ngrok-dash1.dstrbtd.ai';
 
 const BenchmarksMech1Dashboard = () => {
   const [strategies, setStrategies] = useState([]);
