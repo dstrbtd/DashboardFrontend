@@ -72,6 +72,11 @@ html, body, #root {
   position: relative;
 }
 
+/* No sidebar variant */
+.page-layout.no-sidebar {
+  flex-direction: column;
+}
+
 /* Ensure main content fills remaining space */
 .page-layout > *:not(.nav-bar) {
   flex: 1;

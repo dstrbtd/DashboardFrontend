@@ -83,13 +83,15 @@
   position: relative;
   z-index: 1;
   flex: 1;
-  margin-left: 80px;
-  width: calc(100% - 80px); /* Explicit width calculation */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 1600px;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
   gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-xl);
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -170,8 +172,7 @@
 @media (max-width: 768px) {
   .mech0-dashboard .dashboard-content {
     padding: var(--spacing-md);
-    margin-left: 0;
-    padding-bottom: 80px;
+    padding-bottom: 40px;
   }
   
   .mech0-dashboard .iframe-container {

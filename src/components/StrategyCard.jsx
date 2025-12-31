@@ -257,15 +257,15 @@ const StrategyCard = ({ strategy, hurdles }) => {
       {/* Metrics Grid */}
       <div className="metrics-grid">
         <div className={`metric ${hurdleStatus ? (hurdleStatus.loss ? 'pass' : 'fail') : ''}`}>
-          <span className="metric-label">Loss {hurdleStatus && (hurdleStatus.loss ? '✓' : '✗')}</span>
+          <span className="metric-label">Loss</span>
           <span className="metric-value">{formatLoss(loss)}</span>
         </div>
         <div className={`metric ${hurdleStatus ? (hurdleStatus.communication ? 'pass' : 'fail') : ''}`}>
-          <span className="metric-label">Communication {hurdleStatus && (hurdleStatus.communication ? '✓' : '✗')}</span>
+          <span className="metric-label">Communication</span>
           <span className="metric-value">{formatNumber(communication)}</span>
         </div>
         <div className={`metric ${hurdleStatus ? (hurdleStatus.throughput ? 'pass' : 'fail') : ''}`}>
-          <span className="metric-label">Throughput {hurdleStatus && (hurdleStatus.throughput ? '✓' : '✗')}</span>
+          <span className="metric-label">Throughput</span>
           <span className="metric-value">{formatNumber(throughput)}</span>
         </div>
       </div>

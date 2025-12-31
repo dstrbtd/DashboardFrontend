@@ -126,7 +126,12 @@ const BenchmarksMech1Dashboard = () => {
       <div className="dashboard-content">
         {/* Header */}
         <header className="dashboard-header simple">
-          <h1>Mechanism 1</h1>
+          <div className="header-brand">
+            <a href="https://www.dstrbtd.ai/" target="_blank" rel="noopener noreferrer" className="logo-link">
+              <img src="/dstrbdt_logo.png" alt="Dstrbtd" className="header-logo" />
+            </a>
+            <h1>Mechanism 1</h1>
+          </div>
           <div className="config-pills">
             <div className="config-pill">
               <span className="pill-label">Dataset</span>
@@ -171,7 +176,7 @@ const BenchmarksMech1Dashboard = () => {
                     <div className="hurdle-label">Max Loss</div>
                     <div className="hurdle-value">{hurdles.maxLoss?.toFixed(2) || '—'}</div>
                   </div>
-                  <div className="hurdle-direction">↓ lower</div>
+                  <div className="hurdle-direction">lower is better</div>
                 </div>
                 <div className="hurdle-card">
                   <div className="hurdle-icon"><HiOutlineWifi /></div>
@@ -179,7 +184,7 @@ const BenchmarksMech1Dashboard = () => {
                     <div className="hurdle-label">Max Comm</div>
                     <div className="hurdle-value">{formatNumber(hurdles.maxCommunication)}</div>
                   </div>
-                  <div className="hurdle-direction">↓ lower</div>
+                  <div className="hurdle-direction">lower is better</div>
                 </div>
                 <div className="hurdle-card">
                   <div className="hurdle-icon"><HiOutlineLightningBolt /></div>
@@ -187,7 +192,7 @@ const BenchmarksMech1Dashboard = () => {
                     <div className="hurdle-label">Min Throughput</div>
                     <div className="hurdle-value">{formatNumber(hurdles.minThroughput)}</div>
                   </div>
-                  <div className="hurdle-direction">↑ higher</div>
+                  <div className="hurdle-direction">higher is better</div>
                 </div>
               </div>
             </section>
