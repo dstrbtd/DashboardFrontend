@@ -23,7 +23,7 @@ else:
 
 def initialize_influx_client() -> InfluxDBClient:
     client = InfluxDBClient(
-        url="http://161.97.156.125:8086",
+        url=os.getenv("INFLUXDB_URL"),
         token=os.getenv("INFLUXDB_TOKEN_MECHANISM_0"),
         org=os.getenv("INFLUXDB_ORG"),
         timeout=260_000
