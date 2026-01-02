@@ -3,7 +3,7 @@ import InvestorGraphLoss from '../components/PerformanceGraphLoss';
 import InvestorGraphPerplexity from '../components/PerformanceGraphPerplexity';
 import InvestorGraphPeers from '../components/PerformanceGraphPeers';
 import InvestorGraphLR from '../components/PerformanceGraphLR';
-import websocketConfig from '../config/websocketUrls';
+import endpointConfig from '../config/endpointUrls';
 import '../styles/PerformanceDashboard.css';
 
 const PerformanceDashboard = () => {
@@ -13,7 +13,7 @@ const PerformanceDashboard = () => {
   const [modelName, setModelName] = useState("distributed/llama-4b");
 
   useEffect(() => {
-    const ws = new WebSocket(websocketConfig.WS_URL);
+    const ws = new WebSocket(endpointConfig.WS_URL);
 
     ws.onmessage = (event) => {
       try {
