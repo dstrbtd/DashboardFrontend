@@ -4,6 +4,7 @@ import datetime
 from typing import Callable, Dict
 
 import os
+from dotenv import load_dotenv, find_dotenv
 import torch
 import shutil
 from datasets import load_dataset
@@ -16,11 +17,13 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 # from lm_eval import evaluator as lm_evaluator
 # from lm_eval.models.huggingface import HFLM
 
+load_dotenv(find_dotenv())
+
 # === CONFIG ===
-INFLUXDB_URL = "http://161.97.156.125:8086"
-INFLUXDB_TOKEN = "JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV"
-INFLUXDB_ORG = "distributed-training"
-INFLUXDB_BUCKET = "distributed-training-metrics"
+INFLUXDB_URL = os.getenv("INFLUXDB_URL")
+INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN_MECHANISM_0")
+INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
+INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET_MECHANISM_0")
 INFLUXDB_MEASUREMENT = "evaluation_metrics"
 REPO_ID = "distributed/llama-1b"
 DATASET_ID = "HuggingFaceFW/fineweb-edu"
