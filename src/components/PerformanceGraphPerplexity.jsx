@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import endpointConfig from "../config/endpointUrls";
+import websocketConfig from "../config/websocketUrls";
 
 ChartJS.register(
   CategoryScale,
@@ -31,7 +31,7 @@ export default function InvestorGraphPerplexity() {
   const [runId, setRunId] = useState(null);
 
   useEffect(() => {
-    const ws = new WebSocket(endpointConfig.WS_URL);
+    const ws = new WebSocket(websocketConfig.WS_URL);
     wsRef.current = ws;
 
     ws.onmessage = (event) => {

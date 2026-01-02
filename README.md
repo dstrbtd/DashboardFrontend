@@ -79,7 +79,7 @@ npm run dev  # Runs on http://localhost:5173/
 
 > Tip:
 > To see live data locally, temporarily set CURRENT_WS_URL in
-> endpointUrls.js to LOCAL. Don’t forget to switch it back to NGROK before publishing.
+> websocketUrls.js to LOCAL. Don’t forget to switch it back to NGROK before publishing.
 
 # Publishing the Webpage
 **Deploy with Vercel**
@@ -99,7 +99,7 @@ tmux new -s ngrok_ws
 ngrok http 8765
 ```
 
-Copy the new ngrok URL and update endpointUrls.js:
+Copy the new ngrok URL and update websocketUrls.js:
 
 ```javascript
 NGROK: 'wss://<your_ngrok_subdomain>.ngrok-free.app'
