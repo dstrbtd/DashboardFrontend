@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import websocketConfig from '../config/websocketUrls'; 
+import endpointConfig from '../config/endpointUrls'; 
 
 ChartJS.register(
   CategoryScale,
@@ -29,7 +29,7 @@ export default function MinerGraphV1() {
   const chartRef = useRef(null);
 
   useEffect(() => {
-    const ws = new WebSocket(websocketConfig.WS_URL);
+    const ws = new WebSocket(endpointConfig.WS_URL);
 
     wsRef.current = ws;
 
