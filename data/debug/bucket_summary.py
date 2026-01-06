@@ -1,18 +1,27 @@
 from influxdb_client import InfluxDBClient
 import pandas as pd
 import warnings
+import os
+from dotenv import load_dotenv, find_dotenv
 from influxdb_client.client.warnings import MissingPivotFunction
 
 warnings.simplefilter("ignore", MissingPivotFunction)
 
+load_dotenv(find_dotenv())
+
+INFLUXDB_URL = os.getenv("INFLUXDB_URL")
+INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
+INFLUXDB_BUCKET_MECHANISM_0 = os.getenv("INFLUXDB_BUCKET_MECHANISM_0")
+INFLUXDB_TOKEN_MECHANISM_0 = os.getenv("INFLUXDB_TOKEN_MECHANISM_0")
+
 client = InfluxDBClient(
-    url="http://161.97.156.125:8086",
-    token="JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g==",
-    org="distributed-training"
+    url=INFLUXDB_URL,
+    token=INFLUXDB_TOKEN_MECHANISM_0,
+    org=INFLUXDB_ORG
 )
 query_api = client.query_api()
 
-def list_measurements(bucket="distributed-training-metrics"):
+def list_measurements(bucket=INFLUXDB_BUCKET_MECHANISM_0):
     flux = f'''
     import "influxdata/influxdb/schema"
     schema.measurements(bucket: "{bucket}")
@@ -42,7 +51,7 @@ def list_tags(bucket, measurement):
     df = query_api.query_data_frame(flux)
     return df._value.tolist() if not df.empty else []
 
-def generate_bucket_overview(bucket="distributed-training-metrics"):
+def generate_bucket_overview(bucket=INFLUXDB_BUCKET_MECHANISM_0):
     measurements = list_measurements(bucket)
     overview = []
 

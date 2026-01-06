@@ -1,11 +1,15 @@
+import os
 from influxdb_client import InfluxDBClient
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 # === InfluxDB connection ===
-INFLUXDB_URL = "http://161.97.156.125:8086"
+INFLUXDB_URL = os.getenv("INFLUXDB_URL")
 #INFLUXDB_TOKEN = "JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV"
-INFLUXDB_TOKEN = "JCDOYKFbiC13zdgbTQROpyvB69oaUWvO4pRw_c3AEYhTjU998E_X_oIJJOVAW24nAE0WYxMwIgdFSLZg8aeV-g=="
-INFLUXDB_ORG = "distributed-training"
-INFLUXDB_BUCKET = "distributed-training-metrics"
+INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN_MECHANISM_0")
+INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
+INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET_MECHANISM_0")
 INFLUXDB_MEASUREMENT = "evaluation_metrics"
 
 client = InfluxDBClient(
