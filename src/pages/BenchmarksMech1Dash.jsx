@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { HiOutlineFlag, HiOutlineTrendingDown, HiOutlineWifi, HiOutlineLightningBolt } from 'react-icons/hi';
+import { HiOutlineFlag, HiOutlineTrendingDown, HiOutlineWifi, HiOutlineLightningBolt, HiOutlineClock } from 'react-icons/hi';
 import { RiBarChartLine } from 'react-icons/ri';
 import StrategyCard from '../components/StrategyCard';
 import '../styles/Mech1Dashboard.css';
@@ -10,6 +10,32 @@ const SHOW_METRICS_PANEL = false;
 // API endpoint
 const API_BASE_URL = import.meta.env.VITE_MECH1_API_URL || 'https://ngrok-dash1.dstrbtd.ai';
 
+// Generate SVG path from data points
+const generateChartPath = (data, width = 200, height = 50, invert = false) => {
+  if (!data || data.length === 0) return { line: '', area: '' };
+  
+  const values = data.filter(v => v != null);
+  if (values.length === 0) return { line: '', area: '' };
+  
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  
+  const points = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * width;
+    // Normalize to 0-1, then scale to chart height (with padding)
+    let normalized = (v - min) / range;
+    if (invert) normalized = 1 - normalized; // For loss/comm, lower is better (higher on chart)
+    const y = height - (normalized * (height - 10)) - 5;
+    return { x, y };
+  });
+  
+  const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const area = `${line} L${width},${height} L0,${height} Z`;
+  
+  return { line, area };
+};
+
 const BenchmarksMech1Dashboard = () => {
   const [strategies, setStrategies] = useState([]);
   const [metadata, setMetadata] = useState({});
@@ -19,6 +45,12 @@ const BenchmarksMech1Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  
+  // Historical metrics state
+  const [historyData, setHistoryData] = useState([]);
+  const [evalInterval, setEvalInterval] = useState(3500);
+  const [nextEvalTime, setNextEvalTime] = useState(null);
+  const [secondsRemaining, setSecondsRemaining] = useState(null);
 
   // Calculate hurdle thresholds from benchmarks
   const hurdles = useMemo(() => {
@@ -71,11 +103,57 @@ const BenchmarksMech1Dashboard = () => {
     }
   }, [selectedBlock]);
 
+  // Fetch historical metrics
+  const SECONDS_PER_BLOCK = 12;
+  
+  const fetchHistory = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/mech1/history`);
+      if (response.ok) {
+        const data = await response.json();
+        setHistoryData(data.history || []);
+        setEvalInterval(data.eval_interval || 3500);
+        
+        // Use timestamp-based countdown if available
+        if (data.next_eval_timestamp) {
+          const nextEval = new Date(data.next_eval_timestamp);
+          setNextEvalTime(nextEval);
+          const now = new Date();
+          const remaining = Math.max(0, (nextEval - now) / 1000);
+          setSecondsRemaining(remaining);
+        } else if (data.blocks_until_eval != null) {
+          // Fallback to block-based estimate
+          setSecondsRemaining(data.blocks_until_eval * SECONDS_PER_BLOCK);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching history:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData(selectedBlock);
-    const interval = setInterval(() => fetchData(selectedBlock), 15000);
+    fetchHistory();
+    const interval = setInterval(() => {
+      fetchData(selectedBlock);
+      fetchHistory();
+    }, 15000);
     return () => clearInterval(interval);
-  }, [fetchData, selectedBlock]);
+  }, [fetchData, fetchHistory, selectedBlock]);
+  
+  // Real-time countdown timer - ticks every second
+  useEffect(() => {
+    if (secondsRemaining == null) return;
+    
+    const timer = setInterval(() => {
+      setSecondsRemaining(prev => {
+        if (prev <= 0) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [secondsRemaining != null]); // Start timer when we have initial value
 
   const handleBlockChange = (e) => {
     const block = parseInt(e.target.value, 10);
@@ -86,6 +164,100 @@ const BenchmarksMech1Dashboard = () => {
     if (num === null || num === undefined) return '—';
     return num.toLocaleString();
   };
+  
+  // Calculate hurdle Y position for a given value within the data range
+  const getHurdleY = (hurdleValue, dataValues, height = 50) => {
+    if (hurdleValue == null || !dataValues || dataValues.length === 0) return null;
+    const values = dataValues.filter(v => v != null);
+    if (values.length === 0) return null;
+    
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    
+    // Include hurdle in range calculation for better visualization
+    const extendedMin = Math.min(min, hurdleValue);
+    const extendedMax = Math.max(max, hurdleValue);
+    const extendedRange = extendedMax - extendedMin || 1;
+    
+    const normalized = (hurdleValue - extendedMin) / extendedRange;
+    const y = height - (normalized * (height - 10)) - 5;
+    return y;
+  };
+
+  // Compute chart paths from historical data
+  // No invert for loss/comm - line goes DOWN as values decrease (improvement)
+  // Throughput line goes UP as values increase (improvement)
+  const lossChartData = useMemo(() => {
+    const values = historyData.map(h => h.best_loss).filter(v => v != null);
+    const chartPath = generateChartPath(values, 200, 50, false);
+    const hurdleY = getHurdleY(hurdles?.maxLoss, values);
+    return { ...chartPath, hurdleY };
+  }, [historyData, hurdles?.maxLoss]);
+  
+  const commChartData = useMemo(() => {
+    const values = historyData.map(h => h.best_communication).filter(v => v != null);
+    const chartPath = generateChartPath(values, 200, 50, false);
+    const hurdleY = getHurdleY(hurdles?.maxCommunication, values);
+    return { ...chartPath, hurdleY };
+  }, [historyData, hurdles?.maxCommunication]);
+  
+  const throughputChartData = useMemo(() => {
+    const values = historyData.map(h => h.best_throughput).filter(v => v != null);
+    const chartPath = generateChartPath(values, 200, 50, false);
+    const hurdleY = getHurdleY(hurdles?.minThroughput, values);
+    return { ...chartPath, hurdleY };
+  }, [historyData, hurdles?.minThroughput]);
+  
+  // Get current best values from history
+  const currentBestFromHistory = useMemo(() => {
+    if (historyData.length === 0) return { loss: null, communication: null, throughput: null };
+    const latest = historyData[historyData.length - 1];
+    return {
+      loss: latest?.best_loss,
+      communication: latest?.best_communication,
+      throughput: latest?.best_throughput
+    };
+  }, [historyData]);
+  
+  // Format countdown time from seconds remaining
+  const countdownDisplay = useMemo(() => {
+    if (secondsRemaining == null) return { blocks: '—', time: '—', percent: 0, nextUpdateStr: '—' };
+    
+    const totalSeconds = Math.max(0, Math.floor(secondsRemaining));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    // Calculate blocks from seconds
+    const blocks = Math.ceil(secondsRemaining / SECONDS_PER_BLOCK);
+    const totalEvalSeconds = evalInterval * SECONDS_PER_BLOCK;
+    const percent = Math.max(0, Math.min(100, ((totalEvalSeconds - secondsRemaining) / totalEvalSeconds) * 100));
+    
+    // Format time string (countdown)
+    let timeStr;
+    if (hours > 0) {
+      timeStr = `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      timeStr = `${minutes}m ${seconds}s`;
+    } else {
+      timeStr = `${seconds}s`;
+    }
+    
+    // Format next update time string
+    let nextUpdateStr = '—';
+    if (nextEvalTime) {
+      const evalTime = new Date(nextEvalTime.getTime());
+      nextUpdateStr = evalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    return {
+      blocks: blocks.toLocaleString(),
+      time: timeStr,
+      percent,
+      nextUpdateStr
+    };
+  }, [secondsRemaining, evalInterval, nextEvalTime]);
 
   // Count miners vs benchmarks
   const minerCount = strategies.filter(s => !s.is_benchmark).length;
@@ -154,6 +326,134 @@ const BenchmarksMech1Dashboard = () => {
 
         {/* Main Canvas */}
         <div className="main-canvas">
+          {/* Performance Metrics Widgets */}
+          <section className="metrics-widgets-section">
+            <div className="widgets-grid">
+              {/* Best Loss Chart */}
+              <div className="widget-card">
+                <div className="widget-header">
+                  <div className="widget-icon"><HiOutlineTrendingDown /></div>
+                  <div className="widget-info">
+                    <span className="widget-label">Best Loss</span>
+                    <span className="widget-value">{currentBestFromHistory.loss?.toFixed(2) || '—'}</span>
+                  </div>
+                </div>
+                <div className="widget-chart">
+                  <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="chartGradientMono" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(255, 255, 255, 0.15)" />
+                        <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+                      </linearGradient>
+                    </defs>
+                    {lossChartData.hurdleY != null && (
+                      <line x1="0" y1={lossChartData.hurdleY} x2="200" y2={lossChartData.hurdleY} 
+                        stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="4 3" />
+                    )}
+                    {lossChartData.area && <path d={lossChartData.area} fill="url(#chartGradientMono)" />}
+                    {lossChartData.line && <path d={lossChartData.line} fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1.5" />}
+                  </svg>
+                </div>
+                <div className="widget-footer">
+                  <span className="trend-label">↓ lower is better</span>
+                  <span className="data-points">{historyData.length} epochs</span>
+                </div>
+              </div>
+
+              {/* Best Communication Chart */}
+              <div className="widget-card">
+                <div className="widget-header">
+                  <div className="widget-icon"><HiOutlineWifi /></div>
+                  <div className="widget-info">
+                    <span className="widget-label">Best Communication</span>
+                    <span className="widget-value">{formatNumber(currentBestFromHistory.communication)}</span>
+                  </div>
+                </div>
+                <div className="widget-chart">
+                  <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                    {commChartData.hurdleY != null && (
+                      <line x1="0" y1={commChartData.hurdleY} x2="200" y2={commChartData.hurdleY} 
+                        stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="4 3" />
+                    )}
+                    {commChartData.area && <path d={commChartData.area} fill="url(#chartGradientMono)" />}
+                    {commChartData.line && <path d={commChartData.line} fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1.5" />}
+                  </svg>
+                </div>
+                <div className="widget-footer">
+                  <span className="trend-label">↓ lower is better</span>
+                  <span className="data-points">{historyData.length} epochs</span>
+                </div>
+              </div>
+
+              {/* Best Throughput Chart */}
+              <div className="widget-card">
+                <div className="widget-header">
+                  <div className="widget-icon"><HiOutlineLightningBolt /></div>
+                  <div className="widget-info">
+                    <span className="widget-label">Best Throughput</span>
+                    <span className="widget-value">{formatNumber(currentBestFromHistory.throughput)}</span>
+                  </div>
+                </div>
+                <div className="widget-chart">
+                  <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                    {throughputChartData.hurdleY != null && (
+                      <line x1="0" y1={throughputChartData.hurdleY} x2="200" y2={throughputChartData.hurdleY} 
+                        stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="4 3" />
+                    )}
+                    {throughputChartData.area && <path d={throughputChartData.area} fill="url(#chartGradientMono)" />}
+                    {throughputChartData.line && <path d={throughputChartData.line} fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1.5" />}
+                  </svg>
+                </div>
+                <div className="widget-footer">
+                  <span className="trend-label">↑ higher is better</span>
+                  <span className="data-points">{historyData.length} epochs</span>
+                </div>
+              </div>
+
+              {/* Countdown to Next Evaluation */}
+              <div className="widget-card countdown-widget">
+                <div className="widget-header">
+                  <div className="widget-icon"><HiOutlineClock /></div>
+                  <div className="widget-info">
+                    <span className="widget-label">Next Evaluation</span>
+                    <span className="widget-value countdown-value">{countdownDisplay.time}</span>
+                  </div>
+                </div>
+                <div className="countdown-ring-container">
+                  <svg className="countdown-ring" viewBox="0 0 100 100">
+                    <circle 
+                      className="countdown-bg" 
+                      cx="50" cy="50" r="42" 
+                      fill="none" 
+                      stroke="rgba(255,255,255,0.08)" 
+                      strokeWidth="6"
+                    />
+                    <circle 
+                      className="countdown-progress" 
+                      cx="50" cy="50" r="42" 
+                      fill="none" 
+                      stroke="rgba(255, 255, 255, 0.5)" 
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 42}`}
+                      strokeDashoffset={`${2 * Math.PI * 42 * (1 - countdownDisplay.percent / 100)}`}
+                      transform="rotate(-90 50 50)"
+                    />
+                    <text x="50" y="46" textAnchor="middle" className="countdown-blocks">
+                      {countdownDisplay.blocks}
+                    </text>
+                    <text x="50" y="60" textAnchor="middle" className="countdown-blocks-label">
+                      blocks
+                    </text>
+                  </svg>
+                </div>
+                <div className="widget-footer countdown-footer">
+                  <span className="eval-label">next update: {countdownDisplay.nextUpdateStr}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Hurdle Thresholds */}
           {hurdles && (
             <section className="hurdles-section">

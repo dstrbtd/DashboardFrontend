@@ -43,8 +43,12 @@ const StrategyCard = ({ strategy, hurdles }) => {
 
   const badge = getRankBadge();
   
-  // Check if this is a real gist URL (not a benchmark identifier)
-  const isRealGist = gist_url && gist_url.startsWith('http');
+  // Check if this is a gist ID (32-character hex string) or full URL
+  const isGistId = gist_url && /^[a-f0-9]{32}$/i.test(gist_url);
+  const isRealGist = gist_url && (gist_url.startsWith('http') || isGistId);
+  
+  // Construct full gist URL from ID if needed
+  const fullGistUrl = isGistId ? `https://gist.github.com/${gist_url}` : gist_url;
   
   // Benchmark strategy gist URL mapping
   const getBenchmarkGistUrl = (name) => {
@@ -78,7 +82,7 @@ const StrategyCard = ({ strategy, hurdles }) => {
   
   // For benchmarks, get the specific gist URL based on strategy name
   const benchmarkGistUrl = is_benchmark ? getBenchmarkGistUrl(filename) : null;
-  const effectiveGistUrl = isRealGist ? gist_url : benchmarkGistUrl;
+  const effectiveGistUrl = isRealGist ? fullGistUrl : benchmarkGistUrl;
   
   // Clean up filename for display
   const cleanFilename = (name) => {

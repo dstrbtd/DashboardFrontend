@@ -202,6 +202,168 @@
   min-width: 0;
 }
 
+/* ===== METRICS WIDGETS SECTION ===== */
+.metrics-widgets-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+.widget-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+}
+
+.widget-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.widget-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.widget-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.widget-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.widget-value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-chart {
+  flex: 1;
+  min-height: 50px;
+  position: relative;
+}
+
+.widget-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.widget-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.trend-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.data-points {
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* Countdown Widget Specific */
+.countdown-widget .widget-value {
+  font-size: 0.95rem;
+}
+
+.countdown-ring-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+}
+
+.countdown-ring {
+  width: 90px;
+  height: 90px;
+}
+
+.countdown-progress {
+  transition: stroke-dashoffset 1s linear;
+}
+
+.countdown-blocks {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  fill: var(--text-primary);
+}
+
+.countdown-blocks-label {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  fill: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.countdown-footer {
+  justify-content: center;
+}
+
+.eval-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Responsive Widgets */
+@media (max-width: 1200px) {
+  .widgets-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .widgets-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .widget-card {
+    min-height: 160px;
+  }
+}
+
 /* ===== HURDLES SECTION ===== */
 .hurdles-section {
   background: var(--glass-bg);

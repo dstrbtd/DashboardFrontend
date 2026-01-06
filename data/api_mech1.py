@@ -208,8 +208,9 @@ def load_mechanism1_metrics(current_block=None):
     return df, filtered_df, metadata, current_block, all_blocks
 
 
-def load_benchmark_entries(metadata):
+def load_benchmark_entries(metadata, selected_block=None):
     """Load benchmark entries matching the given metadata as individual strategies.
+    Returns benchmarks from the most recent block <= selected_block.
     If no benchmarks match the exact metadata, fall back to the latest available benchmarks."""
     try:
         query = f"""
@@ -230,27 +231,46 @@ def load_benchmark_entries(metadata):
             errors="ignore"
         )
 
+        # Convert current_block to numeric for comparison
+        if "current_block" in df.columns:
+            df["current_block"] = pd.to_numeric(df["current_block"], errors="coerce")
+
         # Try to filter by exact metadata match
         filtered_df = df.copy()
         for field in ["dataset", "max_steps", "model_size", "number_of_nodes"]:
             if field in filtered_df.columns and metadata.get(field):
                 filtered_df = filtered_df[filtered_df[field].astype(str) == str(metadata[field])]
 
-        # If no exact match, fall back to latest available benchmarks
+        # If no exact match, fall back to all available benchmarks
         if filtered_df.empty:
-            print(f"No benchmarks match metadata {metadata}, using latest available benchmarks")
-            # Sort by time and get the latest benchmarks
-            if "_time" in df.columns:
-                df["_time"] = pd.to_datetime(df["_time"])
-                df = df.sort_values("_time", ascending=False)
-            # Use all available benchmarks (deduplicated by hotkey)
-            filtered_df = df.drop_duplicates(subset=["hotkey"], keep="first")
-        else:
-            # Get the latest entry for each unique benchmark (by hotkey)
-            if "_time" in filtered_df.columns:
-                filtered_df["_time"] = pd.to_datetime(filtered_df["_time"])
-                filtered_df = filtered_df.sort_values("_time", ascending=False)
-                filtered_df = filtered_df.drop_duplicates(subset=["hotkey"], keep="first")
+            print(f"No benchmarks match metadata {metadata}, using all available benchmarks")
+            filtered_df = df.copy()
+
+        # Filter by block: get benchmarks from the most recent block <= selected_block
+        if selected_block is not None and "current_block" in filtered_df.columns:
+            # Get benchmarks from blocks <= selected_block
+            filtered_df = filtered_df[filtered_df["current_block"] <= selected_block]
+            
+            if not filtered_df.empty:
+                # Find the most recent block that has benchmark data
+                most_recent_block = filtered_df["current_block"].max()
+                filtered_df = filtered_df[filtered_df["current_block"] == most_recent_block]
+                print(f"Using benchmarks from block {most_recent_block} for selected block {selected_block}")
+        
+        # If still empty after block filtering, use the earliest available benchmarks
+        if filtered_df.empty and not df.empty:
+            print(f"No benchmarks found for blocks <= {selected_block}, using earliest available")
+            if "current_block" in df.columns:
+                earliest_block = df["current_block"].min()
+                filtered_df = df[df["current_block"] == earliest_block]
+            else:
+                filtered_df = df.copy()
+
+        # Deduplicate by hotkey (keep first occurrence after sorting by time)
+        if "_time" in filtered_df.columns:
+            filtered_df["_time"] = pd.to_datetime(filtered_df["_time"])
+            filtered_df = filtered_df.sort_values("_time", ascending=False)
+        filtered_df = filtered_df.drop_duplicates(subset=["hotkey"], keep="first")
 
         benchmarks = []
         for _, row in filtered_df.iterrows():
@@ -347,8 +367,8 @@ async def get_strategies(block: Optional[int] = None):
                 "is_benchmark": False
             })
     
-    # Load benchmark strategies
-    benchmark_strategies = load_benchmark_entries(metadata)
+    # Load benchmark strategies for the selected block
+    benchmark_strategies = load_benchmark_entries(metadata, selected_block=current_block)
     
     # Combine all strategies
     all_strategies = miner_strategies + benchmark_strategies
@@ -384,6 +404,161 @@ async def get_available_blocks():
         "current_block": current_block,
         "available_blocks": [int(b) for b in all_blocks]
     }
+
+
+@app.get("/api/mech1/history")
+async def get_historical_metrics():
+    """Get historical best metrics per block for miners only (excluding benchmarks).
+    Returns best loss (min), best communication (min), best throughput (max) per block."""
+    try:
+        query = f"""
+        from(bucket: "{INFLUXDB_BUCKET}")
+          |> range(start: -30d)
+          |> filter(fn: (r) => r._measurement == "{INFLUXDB_MEASUREMENT}")
+          |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        """
+        df = query_api.query_data_frame(query)
+
+        if isinstance(df, list):
+            df = pd.concat(df)
+        if df.empty:
+            return {"history": [], "next_eval_block": None, "blocks_until_eval": None}
+
+        df = df.drop(
+            columns=[c for c in df.columns if c in ["result", "table", "_start", "_stop", "_measurement"]], 
+            errors="ignore"
+        )
+
+        # Convert current_block to numeric
+        if "current_block" not in df.columns:
+            return {"history": [], "next_eval_block": None, "blocks_until_eval": None}
+        
+        df["current_block"] = pd.to_numeric(df["current_block"], errors="coerce")
+        
+        # Get the current metadata config from the latest block
+        latest_block = df["current_block"].max()
+        latest_df = df[df["current_block"] == latest_block]
+        
+        # Extract current config
+        current_config = {}
+        for field in ["dataset", "max_steps", "model_size", "number_of_nodes"]:
+            if field in latest_df.columns:
+                val = latest_df[field].iloc[0] if len(latest_df) > 0 else None
+                current_config[field] = str(val) if pd.notna(val) else None
+        
+        # Filter by current config to get comparable historical data
+        filtered_df = df.copy()
+        for field, value in current_config.items():
+            if field in filtered_df.columns and value:
+                filtered_df = filtered_df[filtered_df[field].astype(str) == value]
+        
+        if filtered_df.empty:
+            return {"history": [], "next_eval_block": None, "blocks_until_eval": None, "config": current_config}
+        
+        # Group by block and compute best metrics (miners only - excluding benchmarks would need benchmark_flag)
+        # Since this is hotkey_scores measurement, these are all miners
+        history = []
+        
+        # Track running best values across epochs
+        running_best_loss = None
+        running_best_comm = None
+        running_best_throughput = None
+        
+        for block in sorted(filtered_df["current_block"].unique()):
+            block_df = filtered_df[filtered_df["current_block"] == block]
+            
+            # Compute this epoch's best metrics
+            losses = block_df["loss"].dropna() if "loss" in block_df.columns else pd.Series()
+            comms = block_df["communication"].dropna() if "communication" in block_df.columns else pd.Series()
+            throughputs = block_df["throughput"].dropna() if "throughput" in block_df.columns else pd.Series()
+            
+            epoch_best_loss = float(losses.min()) if len(losses) > 0 else None
+            epoch_best_comm = int(comms.min()) if len(comms) > 0 else None
+            epoch_best_throughput = int(throughputs.max()) if len(throughputs) > 0 else None
+            
+            # Update running best: keep the better value (lower for loss/comm, higher for throughput)
+            if epoch_best_loss is not None:
+                if running_best_loss is None or epoch_best_loss < running_best_loss:
+                    running_best_loss = epoch_best_loss
+            
+            if epoch_best_comm is not None:
+                if running_best_comm is None or epoch_best_comm < running_best_comm:
+                    running_best_comm = epoch_best_comm
+            
+            if epoch_best_throughput is not None:
+                if running_best_throughput is None or epoch_best_throughput > running_best_throughput:
+                    running_best_throughput = epoch_best_throughput
+            
+            # Store the running best (cumulative best up to this epoch)
+            history.append({
+                "block": int(block),
+                "best_loss": round(running_best_loss, 4) if running_best_loss is not None else None,
+                "best_communication": running_best_comm,
+                "best_throughput": running_best_throughput,
+                "miner_count": len(block_df)
+            })
+        
+        # Calculate eval interval dynamically from the average difference between consecutive blocks
+        SECONDS_PER_BLOCK = 12
+        DEFAULT_EVAL_INTERVAL = 3500  # fallback if not enough data
+        
+        # Calculate average block interval from history (last 3 intervals for responsiveness)
+        if len(history) >= 2:
+            blocks = [h["block"] for h in history]
+            block_diffs = [blocks[i+1] - blocks[i] for i in range(len(blocks)-1)]
+            # Use the average of the last 3 intervals (or all if less than 3)
+            recent_diffs = block_diffs[-3:] if len(block_diffs) >= 3 else block_diffs
+            avg_interval = sum(recent_diffs) / len(recent_diffs)
+            EVAL_INTERVAL = int(round(avg_interval))
+        else:
+            EVAL_INTERVAL = DEFAULT_EVAL_INTERVAL
+        
+        # Get the timestamp of the last evaluation
+        last_eval_time = None
+        if "_time" in filtered_df.columns:
+            last_eval_df = filtered_df[filtered_df["current_block"] == latest_block]
+            if not last_eval_df.empty:
+                last_eval_time = pd.to_datetime(last_eval_df["_time"].iloc[0])
+                if last_eval_time.tzinfo is None:
+                    last_eval_time = last_eval_time.tz_localize('UTC')
+                else:
+                    last_eval_time = last_eval_time.tz_convert('UTC')
+        
+        # Calculate next eval time and remaining time
+        next_eval_block = int(latest_block) + EVAL_INTERVAL
+        
+        if last_eval_time:
+            from datetime import timedelta
+            eval_duration = timedelta(seconds=EVAL_INTERVAL * SECONDS_PER_BLOCK)
+            next_eval_time = last_eval_time + eval_duration
+            
+            # Calculate seconds until next eval
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            seconds_until_eval = max(0, (next_eval_time - now).total_seconds())
+            blocks_until_eval = int(seconds_until_eval / SECONDS_PER_BLOCK)
+            
+            next_eval_timestamp = next_eval_time.isoformat()
+            last_eval_timestamp = last_eval_time.isoformat()
+        else:
+            # Fallback if no timestamp available
+            blocks_until_eval = EVAL_INTERVAL
+            next_eval_timestamp = None
+            last_eval_timestamp = None
+        
+        return {
+            "history": history,
+            "current_block": int(latest_block),
+            "next_eval_block": next_eval_block,
+            "blocks_until_eval": blocks_until_eval,
+            "eval_interval": EVAL_INTERVAL,
+            "next_eval_timestamp": next_eval_timestamp,
+            "last_eval_timestamp": last_eval_timestamp,
+            "config": current_config
+        }
+    except Exception as e:
+        print(f"Error loading historical metrics: {e}")
+        return {"history": [], "error": str(e)}
 
 
 @app.get("/health")
