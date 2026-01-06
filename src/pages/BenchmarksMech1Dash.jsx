@@ -3,12 +3,12 @@ import { HiOutlineFlag, HiOutlineTrendingDown, HiOutlineWifi, HiOutlineLightning
 import { RiBarChartLine } from 'react-icons/ri';
 import StrategyCard from '../components/StrategyCard';
 import '../styles/Mech1Dashboard.css';
+import endpointConfig from '../config/endpointUrls'; 
 
 // Toggle to show/hide the right metrics panel
 const SHOW_METRICS_PANEL = false;
 
-// API endpoint
-const API_BASE_URL = import.meta.env.VITE_MECH1_API_URL || 'https://ngrok-dash1.dstrbtd.ai';
+const API_BASE_URL = endpointConfig.MECH1_API_URL
 
 // Generate SVG path from data points
 const generateChartPath = (data, width = 200, height = 50, invert = false) => {

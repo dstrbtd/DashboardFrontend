@@ -1,10 +1,11 @@
+
 """
 FastAPI Backend for Mechanism 1 Dashboard
 Serves strategy data from InfluxDB as a clean JSON API
 """
 
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from influxdb_client import InfluxDBClient
@@ -12,6 +13,7 @@ from dotenv import load_dotenv
 import requests
 from typing import Optional
 import uvicorn
+import time
 
 # ------------------------------
 # Load ENV Variables
@@ -39,6 +41,20 @@ query_api = client.query_api()
 # FastAPI App
 # ------------------------------
 app = FastAPI(title="Mechanism 1 API", version="1.0.0")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    ms = (time.time() - start) * 1000
+
+    print(
+        f"[REQ] {request.client.host} "
+        f"{request.method} {request.url.path} "
+        f"status={response.status_code} "
+        f"{ms:.1f}ms"
+    )
+    return response
 
 # CORS for React frontend
 app.add_middleware(
@@ -344,8 +360,16 @@ def safe_str(val):
 
 @app.get("/api/mech1/strategies")
 async def get_strategies(block: Optional[int] = None):
+    print(f"[STRATEGIES] requested block={block}")
+
     """Get all strategies for a given block (or latest if not specified)"""
     _, filtered_df, metadata, current_block, all_blocks = load_mechanism1_metrics(block)
+
+    print(
+        f"[STRATEGIES] using block={current_block} "
+        f"miners={len(filtered_df)} "
+        f"metadata={metadata}"
+    )
     
     # Load miner strategies
     miner_strategies = []
